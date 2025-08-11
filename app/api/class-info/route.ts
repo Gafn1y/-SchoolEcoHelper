@@ -1,88 +1,103 @@
-import { sql } from "@/lib/db"
 import { type NextRequest, NextResponse } from "next/server"
+import { sql } from "@/lib/db"
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("user_id")
+    const user_id = searchParams.get("user_id")
 
-    if (!userId) {
-      return NextResponse.json({ error: "Missing user_id parameter" }, { status: 400 })
+    if (!user_id) {
+      return NextResponse.json({ error: "User ID required" }, { status: 400 })
     }
 
-    // Fetch user information
-    const userResult = await sql`
+    // Get user information
+    const user = await sql`
       SELECT id, name, email, role, school_id, class_id, grade, points, level
-      FROM users
-      WHERE id = ${userId}
+      FROM users 
+      WHERE id = ${user_id}
     `
 
-    if (userResult.length === 0) {
+    if (user.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    const user = userResult[0]
+    const userData = user[0]
 
-    let school = null
-    if (user.school_id) {
-      const schoolResult = await sql`
-        SELECT id, name, address, phone, website, description, director_name, director_email, total_classes
-        FROM schools
-        WHERE id = ${user.school_id}
+    // Get school information with director details
+    let schoolInfo = null
+    if (userData.school_id) {
+      const school = await sql`
+        SELECT s.*, u.name as director_name, u.email as director_email
+        FROM schools s
+        LEFT JOIN users u ON s.director_id = u.id
+        WHERE s.id = ${userData.school_id}
       `
-      school = schoolResult.length > 0 ? schoolResult[0] : null
+
+      if (school.length > 0) {
+        schoolInfo = {
+          id: school[0].id,
+          name: school[0].name,
+          address: school[0].address,
+          phone: school[0].phone,
+          website: school[0].website,
+          description: school[0].description,
+          total_classes: school[0].total_classes,
+          director_name: school[0].director_name,
+          director_email: school[0].director_email,
+          created_at: school[0].created_at,
+        }
+      }
     }
 
-    let classData = null
-    if (user.class_id) {
-      const classResult = await sql`
-        SELECT id, name, grade, teacher_id, student_count
-        FROM classes
-        WHERE id = ${user.class_id}
+    // Get class information with teacher and students
+    let classInfo = null
+    if (userData.class_id) {
+      const classData = await sql`
+        SELECT c.*, u.name as teacher_name, u.email as teacher_email
+        FROM classes c
+        LEFT JOIN users u ON c.teacher_id = u.id
+        WHERE c.id = ${userData.class_id}
       `
-      classData = classResult.length > 0 ? classResult[0] : null
+
+      if (classData.length > 0) {
+        // Get students in this class (excluding teachers)
+        const students = await sql`
+          SELECT id, name, email, points, level
+          FROM users 
+          WHERE class_id = ${userData.class_id} AND role = 'student'
+          ORDER BY points DESC, name
+        `
+
+        classInfo = {
+          id: classData[0].id,
+          name: classData[0].name,
+          grade: classData[0].grade,
+          student_count: classData[0].student_count,
+          capacity: classData[0].capacity,
+          teacher_name: classData[0].teacher_name,
+          teacher_email: classData[0].teacher_email,
+          students: students,
+          created_at: classData[0].created_at,
+        }
+      }
     }
 
-    let teacher = null
-    if (classData?.teacher_id) {
-      const teacherResult = await sql`
-        SELECT id, name, email FROM users WHERE id = ${classData.teacher_id}
-      `
-      teacher = teacherResult.length > 0 ? teacherResult[0] : null
-    }
-
+    // Get classmates (other students in the same class)
     let classmates = []
-    if (user.class_id) {
-      const classmatesResult = await sql`
-        SELECT id, name, email, points, level, created_at
-        FROM users
-        WHERE class_id = ${user.class_id} AND id != ${userId} AND role = 'student'
-        ORDER BY points DESC
+    if (userData.class_id && userData.role === "student") {
+      classmates = await sql`
+        SELECT id, name, email, points, level
+        FROM users 
+        WHERE class_id = ${userData.class_id} AND role = 'student' AND id != ${user_id}
+        ORDER BY points DESC, name
+        LIMIT 10
       `
-      classmates = classmatesResult
     }
 
     return NextResponse.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        school_id: user.school_id,
-        class_id: user.class_id,
-        grade: user.grade,
-        points: user.points,
-        level: user.level,
-      },
-      school: school,
-      class: {
-        id: classData?.id || null,
-        name: classData?.name || null,
-        grade: classData?.grade || null,
-        student_count: classData?.student_count || 0,
-        teacher_name: teacher?.name || null,
-        teacher_email: teacher?.email || null,
-      },
+      user: userData,
+      school: schoolInfo,
+      class: classInfo,
       classmates: classmates,
     })
   } catch (error) {

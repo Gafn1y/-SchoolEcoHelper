@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import { value } from "react" // Declare the variable here
 
 import { useState, useEffect, Suspense } from "react"
 import { Button } from "@/components/ui/button"
@@ -425,7 +424,10 @@ function RegisterForm() {
                         ? "Выберите класс для руководства"
                         : "Выберите класс (необязательно)"}
                     </Label>
-                    <Select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: value })}>
+                    <Select
+                      value={formData.class_id}
+                      onValueChange={(value) => setFormData({ ...formData, class_id: value })}
+                    >
                       <SelectTrigger>
                         <SelectValue
                           placeholder={
@@ -456,7 +458,10 @@ function RegisterForm() {
                 {formData.role === "student" && (
                   <div className="space-y-2">
                     <Label htmlFor="grade">Класс (параллель)</Label>
-                    <Select value={formData.grade} onChange={(e) => setFormData({ ...formData, grade: value })}>
+                    <Select
+                      value={formData.grade}
+                      onValueChange={(value) => setFormData({ ...formData, grade: value })}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Выберите ваш класс" />
                       </SelectTrigger>
