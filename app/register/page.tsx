@@ -367,7 +367,7 @@ function RegisterForm() {
                   <Label htmlFor="school_address">Адрес школы</Label>
                   <Textarea
                     id="school_address"
-                    placeholder="Введите адрес школы"
+                    placeholder="Введите адрес ш��олы"
                     value={formData.school_address}
                     onChange={(e) => setFormData({ ...formData, school_address: e.target.value })}
                     rows={2}
