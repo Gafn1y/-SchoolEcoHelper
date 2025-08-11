@@ -25,6 +25,7 @@ import {
   AlertCircle,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 
 interface Student {
   id: number
@@ -76,18 +77,30 @@ export default function StudentDashboard() {
   const [classInfo, setClassInfo] = useState<ClassInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const { data: session } = useSession()
 
   useEffect(() => {
-    const userData = localStorage.getItem("user")
-    if (!userData) {
-      router.push("/login")
-      return
+    const fetchUserData = async () => {
+      try {
+        // Fetch user data from session or API
+        const userData = localStorage.getItem("user")
+        if (userData) {
+          const parsedUser = JSON.parse(userData)
+          setUser(parsedUser)
+          fetchClassInfo(parsedUser.id)
+        } else {
+          router.push("/login")
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error)
+        setError("Failed to load user data")
+      } finally {
+        setLoading(false)
+      }
     }
 
-    const parsedUser = JSON.parse(userData)
-    setUser(parsedUser)
-    fetchClassInfo(parsedUser.id)
-  }, [router])
+    fetchUserData()
+  }, [router, session])
 
   const fetchClassInfo = async (userId: number) => {
     try {
@@ -297,7 +310,7 @@ export default function StudentDashboard() {
               <CardContent>
                 <div className="text-center py-8">
                   <Leaf className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">У вас пока нет записанных действий</p>
+                  <p className="text-gray-500 mb-4">У вас пока не записано действий</p>
                   <Button onClick={() => router.push("/actions/log")}>Записать первое действие</Button>
                 </div>
               </CardContent>

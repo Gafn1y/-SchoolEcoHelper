@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { sql } from "@/lib/db"
+import { cookies } from "next/headers"
 
 export async function POST(request: NextRequest) {
   try {
@@ -165,6 +166,15 @@ export async function POST(request: NextRequest) {
         console.error("Error fetching class name:", error)
       }
     }
+
+    // Set session cookie
+    cookies().set("user", JSON.stringify(user), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
+    })
 
     return NextResponse.json({
       ...user,
