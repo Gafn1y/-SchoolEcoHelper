@@ -1,54 +1,138 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Leaf, Users, Trophy, Target, BookOpen, Award, ArrowRight, CheckCircle, Star, Globe, Zap } from "lucide-react"
+import {
+  Users,
+  Trophy,
+  Target,
+  ArrowRight,
+  Star,
+  Recycle,
+  TreePine,
+  Droplets,
+  GraduationCap,
+  Building,
+} from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
+  const features = [
+    {
+      icon: Target,
+      title: "Эко-челленджи",
+      description: "Участвуйте в экологических вызовах и соревнуйтесь с одноклассниками",
+    },
+    {
+      icon: Trophy,
+      title: "Система очков",
+      description: "Зарабатывайте очки за экологические действия и поднимайтесь в рейтинге",
+    },
+    {
+      icon: Users,
+      title: "Командная работа",
+      description: "Работайте вместе с классом для достижения общих экологических целей",
+    },
+    {
+      icon: Star,
+      title: "Достижения",
+      description: "Получайте значки и награды за свои экологические достижения",
+    },
+  ]
+
+  const ecoActions = [
+    {
+      icon: Recycle,
+      name: "Переработка",
+      description: "Сортировка и переработка отходов",
+      points: "5-15 очков",
+    },
+    {
+      icon: TreePine,
+      name: "Озеленение",
+      description: "Посадка деревьев и уход за растениями",
+      points: "20-50 очков",
+    },
+    {
+      icon: Droplets,
+      name: "Экономия воды",
+      description: "Рациональное использование водных ресурсов",
+      points: "10-25 очков",
+    },
+  ]
+
+  const roles = [
+    {
+      icon: Building,
+      title: "Директора",
+      description: "Управляйте экологической программой всей школы",
+      color: "purple",
+    },
+    {
+      icon: GraduationCap,
+      title: "Учителя",
+      description: "Ведите свои классы к экологическим достижениям",
+      color: "green",
+    },
+    {
+      icon: Users,
+      title: "Ученики",
+      description: "Участвуйте в челленджах и зарабатывайте очки",
+      color: "blue",
+    },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-green-50">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src="/logo-new.png" alt="EcoSchool" className="h-10 w-10" />
-            <h1 className="text-2xl font-bold text-green-800">EcoSchool</h1>
+      <header className="container mx-auto px-4 py-6">
+        <nav className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/logo-new.png" alt="EcoSchool" className="h-12 w-12" />
+            <span className="text-2xl font-bold text-blue-900">EcoSchool</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/auth/login-choice">
               <Button variant="outline">Войти</Button>
             </Link>
             <Link href="/auth/register-choice">
-              <Button className="bg-green-600 hover:bg-green-700">Регистрация</Button>
+              <Button className="bg-blue-600 hover:bg-blue-700">Регистрация</Button>
             </Link>
           </div>
-        </div>
+        </nav>
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center max-w-4xl">
+      <section className="container mx-auto px-4 py-16 text-center">
+        <div className="max-w-4xl mx-auto">
           <Badge className="mb-6 bg-green-100 text-green-800 hover:bg-green-100">
-            🌱 Экологическое образование будущего
+            🌱 Экологическое образование для всех
           </Badge>
-
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Сделайте экологические активности
-            <span className="text-green-600"> увлекательными и полезными</span>
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            Превратите свою школу в
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-green-600">
+              {" "}
+              эко-лидера
+            </span>
           </h1>
-
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            Платформа для школ, которая превращает экологические действия в увлекательную игру с системой очков,
-            достижений и соревнований между классами.
+            Платформа для школ, которая мотивирует учеников заботиться об окружающей среде через игровые механики,
+            челленджи и командную работу
           </p>
-
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/register-choice">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-lg px-8 py-4">
-                Начните свой эко-путь
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-lg px-8 py-3"
+              >
+                Начать бесплатно
                 <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/auth/login-choice">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-3 bg-transparent">
+                Войти в систему
               </Button>
             </Link>
           </div>
@@ -56,272 +140,124 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Возможности платформы</h2>
-            <p className="text-gray-600 text-lg">Все необходимые инструменты для экологического образования</p>
-          </div>
+      <section className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Как это работает</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            EcoSchool превращает экологическое образование в увлекательную игру с реальным воздействием на окружающую
+            среду
+          </p>
+        </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-green-200 hover:shadow-lg transition-shadow">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {features.map((feature, index) => (
+            <Card key={index} className="text-center hover:shadow-lg transition-shadow">
               <CardHeader>
-                <Trophy className="h-12 w-12 text-green-600 mb-4" />
-                <CardTitle className="text-green-800">Система достижений</CardTitle>
+                <div className="mx-auto mb-4 p-3 bg-blue-100 rounded-full w-fit">
+                  <feature.icon className="h-8 w-8 text-blue-600" />
+                </div>
+                <CardTitle className="text-lg">{feature.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">
-                  Зарабатывайте очки за экологические действия, получайте значки и поднимайтесь в рейтинге.
-                </p>
+                <CardDescription className="text-base">{feature.description}</CardDescription>
               </CardContent>
             </Card>
-
-            <Card className="border-blue-200 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Users className="h-12 w-12 text-blue-600 mb-4" />
-                <CardTitle className="text-blue-800">Командная работа</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  Соревнуйтесь между классами, создавайте команды и достигайте целей вместе.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-purple-200 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Target className="h-12 w-12 text-purple-600 mb-4" />
-                <CardTitle className="text-purple-800">Челленджи</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">Участвуйте в экологических вызовах и достигайте поставленных целей.</p>
-              </CardContent>
-            </Card>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-16 px-4 bg-gradient-to-r from-green-50 to-blue-50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Как это работает</h2>
-            <p className="text-gray-600 text-lg">Простой процесс для начала экологического образования</p>
-          </div>
+      {/* Eco Actions Section */}
+      <section className="container mx-auto px-4 py-16 bg-white/50 rounded-3xl mx-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Экологические действия</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Ученики зарабатывают очки за реальные экологические действия, которые помогают планете
+          </p>
+        </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <BookOpen className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">1. Регистрация</h3>
-              <p className="text-gray-600 text-sm">Создайте аккаунт для школы, класса или ученика</p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Leaf className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">2. Действия</h3>
-              <p className="text-gray-600 text-sm">Выполняйте экологические действия и фиксируйте их</p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Star className="h-8 w-8 text-purple-600" />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">3. Очки</h3>
-              <p className="text-gray-600 text-sm">Получайте очки и повышайте свой уровень</p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Award className="h-8 w-8 text-yellow-600" />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">4. Достижения</h3>
-              <p className="text-gray-600 text-sm">Зарабатывайте значки и участвуйте в рейтинге</p>
-            </div>
-          </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {ecoActions.map((action, index) => (
+            <Card key={index} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <action.icon className="h-6 w-6 text-green-600" />
+                  </div>
+                  <CardTitle className="text-lg">{action.name}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-base mb-3">{action.description}</CardDescription>
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  {action.points}
+                </Badge>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </section>
 
-      {/* Benefits for different roles */}
-      <section className="py-16 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Преимущества для всех</h2>
-            <p className="text-gray-600 text-lg">Каждая роль получает уникальные возможности</p>
-          </div>
+      {/* Roles Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Для всех участников образовательного процесса</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            EcoSchool объединяет директоров, учителей и учеников в общей экологической миссии
+          </p>
+        </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-blue-200">
-              <CardHeader>
-                <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-blue-600" />
+        <div className="grid md:grid-cols-3 gap-6">
+          {roles.map((role, index) => (
+            <Card key={index} className={`hover:shadow-lg transition-shadow border-2 hover:border-${role.color}-300`}>
+              <CardHeader className="text-center">
+                <div className={`mx-auto mb-4 p-4 bg-${role.color}-100 rounded-full w-fit`}>
+                  <role.icon className={`h-10 w-10 text-${role.color}-600`} />
                 </div>
-                <CardTitle className="text-blue-800">Для учеников</CardTitle>
+                <CardTitle className="text-xl">{role.title}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Увлекательное обучение</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Система достижений</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Соревнования с друзьями</span>
-                </div>
+              <CardContent>
+                <CardDescription className="text-base text-center">{role.description}</CardDescription>
               </CardContent>
             </Card>
-
-            <Card className="border-green-200">
-              <CardHeader>
-                <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <BookOpen className="h-6 w-6 text-green-600" />
-                </div>
-                <CardTitle className="text-green-800">Для учителей</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Управление классом</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Отслеживание прогресса</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Награждение учеников</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-purple-200">
-              <CardHeader>
-                <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <Globe className="h-6 w-6 text-purple-600" />
-                </div>
-                <CardTitle className="text-purple-800">Для директоров</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Управление школой</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Аналитика и отчеты</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Приглашение учителей</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-green-600 to-blue-600 text-white">
-        <div className="container mx-auto text-center max-w-4xl">
-          <h2 className="text-4xl font-bold mb-6">Готовы начать экологическое образование?</h2>
-          <p className="text-xl mb-8 opacity-90">
-            Присоединяйтесь к тысячам школ, которые уже используют EcoSchool для создания более экологически
-            сознательного поколения.
-          </p>
-          <Link href="/auth/register-choice">
-            <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100 text-lg px-8 py-4">
-              Начать бесплатно
-              <Zap className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-        </div>
+      <section className="container mx-auto px-4 py-16">
+        <Card className="bg-gradient-to-r from-blue-600 via-cyan-600 to-green-600 text-white">
+          <CardContent className="text-center py-12">
+            <h2 className="text-3xl font-bold mb-4">Готовы начать экологическое путешествие?</h2>
+            <p className="text-xl mb-8 opacity-90">Присоединяйтесь к тысячам школ, которые уже делают мир лучше</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/auth/register-choice">
+                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3">
+                  Зарегистрировать школу
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="/auth/login-choice">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-white hover:bg-white/10 text-lg px-8 py-3 bg-transparent"
+                >
+                  Войти в систему
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <img src="/logo-new.png" alt="EcoSchool" className="h-8 w-8" />
-                <h3 className="text-xl font-bold">EcoSchool</h3>
-              </div>
-              <p className="text-gray-400 text-sm">Платформа для экологического образования нового поколения.</p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Продукт</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li>
-                  <Link href="#" className="hover:text-white">
-                    Возможности
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white">
-                    Цены
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white">
-                    Безопасность
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Поддержка</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li>
-                  <Link href="#" className="hover:text-white">
-                    Документация
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white">
-                    Помощь
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white">
-                    Контакты
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Компания</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li>
-                  <Link href="#" className="hover:text-white">
-                    О нас
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white">
-                    Блог
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white">
-                    Карьера
-                  </Link>
-                </li>
-              </ul>
-            </div>
+      <footer className="container mx-auto px-4 py-8 border-t border-gray-200 mt-16">
+        <div className="flex flex-col md:flex-row items-center justify-between">
+          <div className="flex items-center gap-3 mb-4 md:mb-0">
+            <img src="/logo-new.png" alt="EcoSchool" className="h-8 w-8" />
+            <span className="text-lg font-semibold text-gray-800">EcoSchool</span>
           </div>
-
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 EcoSchool. Все права защищены.</p>
-          </div>
+          <div className="text-sm text-gray-600">© 2024 EcoSchool. Делаем образование экологичным.</div>
         </div>
       </footer>
     </div>

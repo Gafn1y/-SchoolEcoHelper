@@ -4,236 +4,87 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Database, AlertTriangle, RefreshCw, CheckCircle, XCircle } from 'lucide-react'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Database, AlertTriangle, RefreshCw } from "lucide-react"
 
 export default function DatabaseAdminPage() {
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [message, setMessage] = useState("")
   const [error, setError] = useState("")
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
-  const handleResetDatabase = async () => {
+  const resetDatabase = async () => {
+    if (!confirm("Are you sure you want to reset the database? This will delete ALL data!")) {
+      return
+    }
+
     setLoading(true)
+    setMessage("")
     setError("")
-    setResult(null)
 
     try {
-      const response = await fetch('/api/database/reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirm: 'RESET_DATABASE' })
+      const response = await fetch("/api/database/reset", {
+        method: "POST",
       })
 
-      const data = await response.json()
-
       if (response.ok) {
-        setResult(data)
-        // Clear localStorage since all users are deleted
-        localStorage.clear()
+        setMessage("Database reset successfully!")
       } else {
-        setError(data.error || 'Reset failed')
+        const data = await response.json()
+        setError(data.error || "Failed to reset database")
       }
-    } catch (error) {
-      console.error('Reset error:', error)
-      setError('Network error occurred')
+    } catch (err) {
+      setError("Network error occurred")
     } finally {
       setLoading(false)
-      setShowConfirmDialog(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <img src="/logo-new.png" alt="EcoSchool" className="h-12 w-12" />
-            <div>
-              <h1 className="text-2xl font-bold text-red-900">EcoSchool Admin</h1>
-              <p className="text-sm text-gray-600">Управление базой данных</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-8">
+          <Database className="h-8 w-8 text-blue-600" />
+          <h1 className="text-3xl font-bold">Database Administration</h1>
         </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Warning */}
-        <Alert className="mb-6">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>⚠️ ВНИМАНИЕ:</strong> Эта страница предназначена только для разработки. 
-            Операции на этой странице могут полностью удалить все данные!
-          </AlertDescription>
-        </Alert>
-
-        {/* Database Reset */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-900">
-              <Database className="h-5 w-5" />
-              Сброс базы данных
-            </CardTitle>
-            <CardDescription>
-              Полностью удаляет все данные и пересоздает структуру БД с нуля
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h3 className="font-semibold text-red-900 mb-2">Что произойдет:</h3>
-              <ul className="text-sm text-red-800 space-y-1">
-                <li>• Все пользователи будут удалены</li>
-                <li>• Все школы и классы будут удалены</li>
-                <li>• Все эко-действия и очки будут сброшены</li>
-                <li>• Все приглашения и челленджи будут удалены</li>
-                <li>• Структура БД будет пересоздана с базовыми данными</li>
-              </ul>
-            </div>
-
-            <Button 
-              variant="destructive" 
-              onClick={() => setShowConfirmDialog(true)}
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Сброс базы данных...
-                </>
-              ) : (
-                <>
-                  <Database className="mr-2 h-4 w-4" />
-                  Сбросить базу данных
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Results */}
-        {result && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-900">
-                <CheckCircle className="h-5 w-5" />
-                Операция выполнена успешно
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Alert>
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    {result.message}
-                  </AlertDescription>
-                </Alert>
-
-                <div>
-                  <h3 className="font-semibold mb-2">Созданные таблицы:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {result.tables_created?.map((table: string) => (
-                      <Badge key={table} variant="outline">
-                        {table}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold mb-2">Базовые данные:</h3>
-                  <div className="text-sm text-gray-600">
-                    <p>• Эко-действий: {result.default_data?.eco_actions}</p>
-                    <p>• Значков: {result.default_data?.badges}</p>
-                  </div>
-                </div>
-
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    Все пользовательские сессии сброшены. Необходимо заново зарегистрироваться.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Error */}
-        {error && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-900">
-                <XCircle className="h-5 w-5" />
-                Ошибка
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Alert variant="destructive">
-                <XCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {error}
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Быстрые действия</CardTitle>
-            <CardDescription>
-              Полезные ссылки после сброса БД
-            </CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Danger Zone
+            </CardTitle>
+            <CardDescription>These actions are irreversible and should only be used in development.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <a href="/">
-                Вернуться на главную страницу
-              </a>
-            </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <a href="/auth/register-choice">
-                Создать нового пользователя
-              </a>
-            </Button>
+          <CardContent className="space-y-4">
+            {message && (
+              <Alert>
+                <AlertDescription>{message}</AlertDescription>
+              </Alert>
+            )}
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+              <h3 className="font-semibold text-red-800 mb-2">Reset Database</h3>
+              <p className="text-sm text-red-700 mb-4">
+                This will permanently delete all data including users, schools, classes, and actions.
+              </p>
+              <Button
+                onClick={resetDatabase}
+                disabled={loading}
+                variant="destructive"
+                className="flex items-center gap-2"
+              >
+                {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <AlertTriangle className="h-4 w-4" />}
+                {loading ? "Resetting..." : "Reset Database"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Confirmation Dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-red-900">Подтвердите сброс базы данных</DialogTitle>
-            <DialogDescription>
-              Это действие нельзя отменить. Все данные будут безвозвратно удалены.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>ВНИМАНИЕ:</strong> Будут удалены ВСЕ данные:
-                <br />• Пользователи, школы, классы
-                <br />• Эко-действия, очки, значки
-                <br />• Приглашения, челленджи
-              </AlertDescription>
-            </Alert>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
-              Отмена
-            </Button>
-            <Button variant="destructive" onClick={handleResetDatabase}>
-              Да, сбросить базу данных
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
