@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Users, GraduationCap, Building } from 'lucide-react'
+import { ArrowLeft, Users, GraduationCap, Building } from "lucide-react"
 import Link from "next/link"
 
 export default function LoginChoicePage() {
@@ -33,9 +33,7 @@ export default function LoginChoicePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                  Войти как директор
-                </Button>
+                <Button className="w-full bg-purple-600 hover:bg-purple-700">Войти как директор</Button>
               </CardContent>
             </Card>
           </Link>
@@ -47,14 +45,10 @@ export default function LoginChoicePage() {
                   <GraduationCap className="h-12 w-12 text-green-600" />
                 </div>
                 <CardTitle className="text-xl">Войти как учитель</CardTitle>
-                <CardDescription className="text-base">
-                  Управляйте своими классами и челленджами
-                </CardDescription>
+                <CardDescription className="text-base">Управляйте своими классами и челленджами</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full bg-green-600 hover:bg-green-700">
-                  Войти как учитель
-                </Button>
+                <Button className="w-full bg-green-600 hover:bg-green-700">Войти как учитель</Button>
               </CardContent>
             </Card>
           </Link>
@@ -66,14 +60,10 @@ export default function LoginChoicePage() {
                   <Users className="h-12 w-12 text-blue-600" />
                 </div>
                 <CardTitle className="text-xl">Войти как ученик</CardTitle>
-                <CardDescription className="text-base">
-                  Продолжите свой экологический путь
-                </CardDescription>
+                <CardDescription className="text-base">Продолжите свой экологический путь</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                  Войти как ученик
-                </Button>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700">Войти как ученик</Button>
               </CardContent>
             </Card>
           </Link>

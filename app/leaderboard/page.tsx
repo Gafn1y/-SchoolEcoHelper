@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Trophy, Medal, Award, Crown, Star, Users, School, TrendingUp } from 'lucide-react'
+import { ArrowLeft, Trophy, Medal, Award, Crown, Star, Users, School, TrendingUp } from "lucide-react"
 import Link from "next/link"
 
 const studentLeaderboard = []
@@ -50,9 +50,7 @@ export default function LeaderboardPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-2">Экологические чемпионы</h2>
-          <p className="text-gray-600">
-            Посмотрите, как вы и ваша школа влияете на охрану окружающей среды.
-          </p>
+          <p className="text-gray-600">Посмотрите, как вы и ваша школа влияете на охрану окружающей среды.</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -78,9 +76,7 @@ export default function LeaderboardPage() {
                   <Trophy className="h-5 w-5 text-yellow-600" />
                   Лучшие ученики
                 </CardTitle>
-                <CardDescription>
-                  Индивидуальный рейтинг учеников на основе заработанных эко-очков
-                </CardDescription>
+                <CardDescription>Индивидуальный рейтинг учеников на основе заработанных эко-очков</CardDescription>
               </CardHeader>
               <CardContent>
                 {studentLeaderboard.length === 0 ? (
@@ -100,23 +96,27 @@ export default function LeaderboardPage() {
                             : "bg-white"
                         }`}
                       >
-                        <div className="flex items-center justify-center w-8">
-                          {getRankIcon(student.rank)}
-                        </div>
+                        <div className="flex items-center justify-center w-8">{getRankIcon(student.rank)}</div>
 
                         <Avatar>
-                          <AvatarImage src={`/placeholder-40x40.png?height=40&width=40&text=${student.name.split(' ').map(n => n[0]).join('')}`} />
+                          <AvatarImage
+                            src={`/placeholder-40x40.png?height=40&width=40&text=${student.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}`}
+                          />
                           <AvatarFallback>
-                            {student.name.split(' ').map(n => n[0]).join('')}
+                            {student.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
                           </AvatarFallback>
                         </Avatar>
 
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">{student.name}</h3>
-                            {student.name === "Демо Ученик" && (
-                              <Badge variant="secondary">Вы</Badge>
-                            )}
+                            {student.name === "Демо Ученик" && <Badge variant="secondary">Вы</Badge>}
                           </div>
                           <p className="text-sm text-gray-600">
                             Grade {student.grade} • {student.school}
@@ -147,9 +147,7 @@ export default function LeaderboardPage() {
                   <School className="h-5 w-5 text-blue-600" />
                   Лучшие классы
                 </CardTitle>
-                <CardDescription>
-                  Рейтинг классов на основе суммарных очков учеников
-                </CardDescription>
+                <CardDescription>Рейтинг классов на основе суммарных очков учеников</CardDescription>
               </CardHeader>
               <CardContent>
                 {classLeaderboard.length === 0 ? (
@@ -161,13 +159,8 @@ export default function LeaderboardPage() {
                 ) : (
                   <div className="space-y-4">
                     {classLeaderboard.map((classData) => (
-                      <div
-                        key={classData.rank}
-                        className="flex items-center gap-4 p-4 rounded-lg border bg-white"
-                      >
-                        <div className="flex items-center justify-center w-8">
-                          {getRankIcon(classData.rank)}
-                        </div>
+                      <div key={classData.rank} className="flex items-center gap-4 p-4 rounded-lg border bg-white">
+                        <div className="flex items-center justify-center w-8">{getRankIcon(classData.rank)}</div>
 
                         <div className="flex-1">
                           <h3 className="font-semibold">{classData.name}</h3>
@@ -200,9 +193,7 @@ export default function LeaderboardPage() {
                   <TrendingUp className="h-5 w-5 text-purple-600" />
                   Лучшие школы
                 </CardTitle>
-                <CardDescription>
-                  Рейтинг школ на основе общего экологического воздействия
-                </CardDescription>
+                <CardDescription>Рейтинг школ на основе общего экологического воздействия</CardDescription>
               </CardHeader>
               <CardContent>
                 {schoolLeaderboard.length === 0 ? (
@@ -222,20 +213,14 @@ export default function LeaderboardPage() {
                             : "bg-white"
                         }`}
                       >
-                        <div className="flex items-center justify-center w-8">
-                          {getRankIcon(school.rank)}
-                        </div>
+                        <div className="flex items-center justify-center w-8">{getRankIcon(school.rank)}</div>
 
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">{school.name}</h3>
-                            {school.name === "Школа Зеленая Долина" && (
-                              <Badge variant="secondary">Ваша школа</Badge>
-                            )}
+                            {school.name === "Школа Зеленая Долина" && <Badge variant="secondary">Ваша школа</Badge>}
                           </div>
-                          <p className="text-sm text-gray-600">
-                            {school.students} учеников участвует
-                          </p>
+                          <p className="text-sm text-gray-600">{school.students} учеников участвует</p>
                         </div>
 
                         <div className="text-right">

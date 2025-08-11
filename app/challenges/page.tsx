@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Target, Calendar, Users, Trophy, Clock, CheckCircle, Recycle, TreePine, Droplets, Lightbulb, Car, Trash2 } from 'lucide-react'
+import { ArrowLeft, Target, Calendar, Users, Trophy, Clock, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 const weeklyChallenge = null
@@ -96,20 +96,20 @@ export default function ChallengesPage() {
                 <weeklyChallenge.icon className="h-6 w-6 text-blue-600" />
                 {weeklyChallenge.title}
               </CardTitle>
-              <CardDescription className="text-base">
-                {weeklyChallenge.description}
-              </CardDescription>
+              <CardDescription className="text-base">{weeklyChallenge.description}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span>Прогресс: {weeklyChallenge.current}/{weeklyChallenge.target}</span>
+                    <span>
+                      Прогресс: {weeklyChallenge.current}/{weeklyChallenge.target}
+                    </span>
                     <span>{Math.round((weeklyChallenge.current / weeklyChallenge.target) * 100)}%</span>
                   </div>
                   <Progress value={(weeklyChallenge.current / weeklyChallenge.target) * 100} className="h-3" />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
@@ -159,18 +159,19 @@ export default function ChallengesPage() {
                 {activeChallenges.map((challenge) => {
                   const IconComponent = challenge.icon
                   const progress = (challenge.current / challenge.target) * 100
-                  
+
                   return (
                     <Card key={challenge.id} className="hover:shadow-lg transition-shadow">
                       <CardHeader>
                         <div className="flex items-center justify-between mb-2">
                           <Badge className={getDifficultyColor(challenge.difficulty)}>
-                            {
-                              challenge.difficulty === "Easy" ? "Легко" :
-                              challenge.difficulty === "Medium" ? "Средне" :
-                              challenge.difficulty === "Hard" ? "Сложно" :
-                              challenge.difficulty
-                            }
+                            {challenge.difficulty === "Easy"
+                              ? "Легко"
+                              : challenge.difficulty === "Medium"
+                                ? "Средне"
+                                : challenge.difficulty === "Hard"
+                                  ? "Сложно"
+                                  : challenge.difficulty}
                           </Badge>
                           <Badge variant="outline">
                             <Clock className="h-3 w-3 mr-1" />
@@ -181,20 +182,20 @@ export default function ChallengesPage() {
                           <IconComponent className="h-5 w-5 text-blue-600" />
                           {challenge.title}
                         </CardTitle>
-                        <CardDescription>
-                          {challenge.description}
-                        </CardDescription>
+                        <CardDescription>{challenge.description}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
                           <div>
                             <div className="flex justify-between text-sm mb-2">
-                              <span>Прогресс: {challenge.current}/{challenge.target}</span>
+                              <span>
+                                Прогресс: {challenge.current}/{challenge.target}
+                              </span>
                               <span>{Math.round(progress)}%</span>
                             </div>
                             <Progress value={progress} />
                           </div>
-                          
+
                           <div className="flex items-center justify-between text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Trophy className="h-4 w-4" />
@@ -205,9 +206,9 @@ export default function ChallengesPage() {
                               <span>{challenge.participants}</span>
                             </div>
                           </div>
-                          
-                          <Button 
-                            className="w-full" 
+
+                          <Button
+                            className="w-full"
                             variant={progress > 0 ? "default" : "outline"}
                             onClick={() => joinChallenge(challenge.id)}
                           >
@@ -226,7 +227,7 @@ export default function ChallengesPage() {
             <div className="space-y-4">
               {completedChallenges.map((challenge) => {
                 const IconComponent = challenge.icon
-                
+
                 return (
                   <Card key={challenge.id} className="bg-green-50 border-green-200">
                     <CardContent className="p-6">
@@ -234,7 +235,7 @@ export default function ChallengesPage() {
                         <div className="p-3 bg-green-100 rounded-full">
                           <IconComponent className="h-6 w-6 text-green-600" />
                         </div>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-semibold">{challenge.title}</h3>
@@ -243,18 +244,16 @@ export default function ChallengesPage() {
                           <p className="text-sm text-gray-600 mb-2">{challenge.description}</p>
                           <p className="text-xs text-gray-500">Completed {translateDate(challenge.completedDate)}</p>
                         </div>
-                        
+
                         <div className="text-right">
-                          <Badge className="bg-green-600">
-                            +{challenge.points} очков
-                          </Badge>
+                          <Badge className="bg-green-600">+{challenge.points} очков</Badge>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 )
               })}
-              
+
               {completedChallenges.length === 0 && (
                 <Card>
                   <CardContent className="text-center py-12">
@@ -280,18 +279,19 @@ export default function ChallengesPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 {upcomingChallenges.map((challenge) => {
                   const IconComponent = challenge.icon
-                  
+
                   return (
                     <Card key={challenge.id} className="border-dashed">
                       <CardHeader>
                         <div className="flex items-center justify-between mb-2">
                           <Badge className={getDifficultyColor(challenge.difficulty)}>
-                            {
-                              challenge.difficulty === "Easy" ? "Легко" :
-                              challenge.difficulty === "Medium" ? "Средне" :
-                              challenge.difficulty === "Hard" ? "Сложно" :
-                              challenge.difficulty
-                            }
+                            {challenge.difficulty === "Easy"
+                              ? "Легко"
+                              : challenge.difficulty === "Medium"
+                                ? "Средне"
+                                : challenge.difficulty === "Hard"
+                                  ? "Сложно"
+                                  : challenge.difficulty}
                           </Badge>
                           <Badge variant="outline">
                             <Calendar className="h-3 w-3 mr-1" />
@@ -302,9 +302,7 @@ export default function ChallengesPage() {
                           <IconComponent className="h-5 w-5 text-gray-500" />
                           {challenge.title}
                         </CardTitle>
-                        <CardDescription>
-                          {challenge.description}
-                        </CardDescription>
+                        <CardDescription>{challenge.description}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-3">
@@ -318,8 +316,8 @@ export default function ChallengesPage() {
                               <span>{challenge.duration}</span>
                             </div>
                           </div>
-                          
-                          <Button className="w-full" variant="outline" disabled>
+
+                          <Button className="w-full bg-transparent" variant="outline" disabled>
                             Скоро
                           </Button>
                         </div>
