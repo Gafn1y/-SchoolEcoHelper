@@ -1,10 +1,8 @@
-import { neon } from '@neondatabase/serverless'
+import { neon } from "@neondatabase/serverless"
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set')
-}
+const sql = neon(process.env.DATABASE_URL!)
 
-export const sql = neon(process.env.DATABASE_URL)
+export { sql }
 
 // Types
 export interface School {
@@ -21,7 +19,7 @@ export interface User {
   id: number
   name: string
   email: string
-  role: 'student' | 'teacher' | 'director' | 'admin'
+  role: "student" | "teacher" | "director" | "admin"
   school_id?: number
   grade?: string
   points: number

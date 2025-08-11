@@ -1,334 +1,366 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Target, Calendar, Users, Trophy, Clock, CheckCircle, Recycle, TreePine, Droplets, Lightbulb, Car, Trash2 } from 'lucide-react'
+import {
+  Target,
+  Calendar,
+  Users,
+  Trophy,
+  Clock,
+  CheckCircle,
+  Star,
+  Menu,
+  ArrowLeft,
+  Leaf,
+  Recycle,
+  Droplets,
+} from "lucide-react"
 import Link from "next/link"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
-const weeklyChallenge = null
+interface Challenge {
+  id: number
+  title: string
+  description: string
+  points: number
+  progress: number
+  maxProgress: number
+  deadline: string
+  difficulty: "easy" | "medium" | "hard"
+  category: string
+  participants: number
+  status: "active" | "completed" | "upcoming"
+  icon: any
+}
 
-const activeChallenges = []
-const completedChallenges = []
-const upcomingChallenges = []
+export default function Challenges() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [challenges, setChallenges] = useState<Challenge[]>([])
+  const [loading, setLoading] = useState(true)
 
-export default function ChallengesPage() {
-  const [activeTab, setActiveTab] = useState("active")
+  useEffect(() => {
+    // Mock data - replace with actual API calls
+    const mockChallenges: Challenge[] = [
+      {
+        id: 1,
+        title: "Неделя без пластика",
+        description: "Откажитесь от одноразового пластика на целую неделю",
+        points: 100,
+        progress: 5,
+        maxProgress: 7,
+        deadline: "2024-02-15",
+        difficulty: "medium",
+        category: "Экология",
+        participants: 45,
+        status: "active",
+        icon: Recycle,
+      },
+      {
+        id: 2,
+        title: "Сбор макулатуры",
+        description: "Соберите 10 кг макулатуры для переработки",
+        points: 50,
+        progress: 7,
+        maxProgress: 10,
+        deadline: "2024-02-20",
+        difficulty: "easy",
+        category: "Переработка",
+        participants: 32,
+        status: "active",
+        icon: Leaf,
+      },
+      {
+        id: 3,
+        title: "Экономия воды",
+        description: "Сократите потребление воды на 20% в течение месяца",
+        points: 150,
+        progress: 12,
+        maxProgress: 30,
+        deadline: "2024-03-01",
+        difficulty: "hard",
+        category: "Ресурсы",
+        participants: 28,
+        status: "active",
+        icon: Droplets,
+      },
+      {
+        id: 4,
+        title: "Зеленый транспорт",
+        description: "Используйте только экологичный транспорт неделю",
+        points: 80,
+        progress: 80,
+        maxProgress: 80,
+        deadline: "2024-01-30",
+        difficulty: "medium",
+        category: "Транспорт",
+        participants: 67,
+        status: "completed",
+        icon: Target,
+      },
+    ]
+
+    setChallenges(mockChallenges)
+    setLoading(false)
+  }, [])
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "Easy":
+      case "easy":
         return "bg-green-100 text-green-800"
-      case "Medium":
+      case "medium":
         return "bg-yellow-100 text-yellow-800"
-      case "Hard":
+      case "hard":
         return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
   }
 
-  const joinChallenge = (challengeId: number) => {
-    alert("Вы присоединились к челленджу! Проверьте свою панель для отслеживания прогресса.")
+  const getDifficultyText = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy":
+        return "Легкий"
+      case "medium":
+        return "Средний"
+      case "hard":
+        return "Сложный"
+      default:
+        return "Неизвестно"
+    }
   }
 
-  const translateTime = (time: string) => {
-    if (time.includes("days")) {
-      return time.replace("days", "дней")
-    } else if (time.includes("week")) {
-      return time.replace("week", "неделя").replace("weeks", "недель")
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-blue-100 text-blue-800"
+      case "completed":
+        return "bg-green-100 text-green-800"
+      case "upcoming":
+        return "bg-gray-100 text-gray-800"
+      default:
+        return "bg-gray-100 text-gray-800"
     }
-    return time
   }
 
-  const translateDate = (date: string) => {
-    if (date.includes("days ago")) {
-      return date.replace("days ago", "дней назад")
-    } else if (date.includes("week ago")) {
-      return date.replace("week ago", "неделю назад")
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "active":
+        return "Активный"
+      case "completed":
+        return "Завершен"
+      case "upcoming":
+        return "Скоро"
+      default:
+        return "Неизвестно"
     }
-    return date
   }
 
-  const translateStartDate = (date: string) => {
-    if (date.includes("Next Monday")) {
-      return "Следующий понедельник"
-    } else if (date.includes("In 2 weeks")) {
-      return "Через 2 недели"
-    }
-    return date
+  const renderChallenge = (challenge: Challenge) => (
+    <Card key={challenge.id} className="hover:shadow-lg transition-shadow duration-300">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <challenge.icon className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
+            </div>
+            <div>
+              <CardTitle className="text-base lg:text-lg">{challenge.title}</CardTitle>
+              <div className="flex items-center space-x-2 mt-1">
+                <Badge className={getDifficultyColor(challenge.difficulty)} variant="secondary">
+                  {getDifficultyText(challenge.difficulty)}
+                </Badge>
+                <Badge className={getStatusColor(challenge.status)} variant="secondary">
+                  {getStatusText(challenge.status)}
+                </Badge>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center space-x-1">
+              <Star className="w-4 h-4 text-yellow-500" />
+              <span className="font-bold text-green-600 text-sm lg:text-base">{challenge.points}</span>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        <CardDescription className="text-sm lg:text-base">{challenge.description}</CardDescription>
+
+        {challenge.status === "active" && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Прогресс</span>
+              <span>
+                {challenge.progress}/{challenge.maxProgress}
+              </span>
+            </div>
+            <Progress value={(challenge.progress / challenge.maxProgress) * 100} className="h-2" />
+          </div>
+        )}
+
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
+              <Calendar className="w-4 h-4" />
+              <span className="text-xs lg:text-sm">{new Date(challenge.deadline).toLocaleDateString("ru-RU")}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Users className="w-4 h-4" />
+              <span className="text-xs lg:text-sm">{challenge.participants}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex space-x-2">
+          {challenge.status === "active" && (
+            <Button className="flex-1 bg-green-600 hover:bg-green-700 text-sm lg:text-base">Участвовать</Button>
+          )}
+          {challenge.status === "completed" && (
+            <Button variant="outline" className="flex-1 text-sm lg:text-base bg-transparent" disabled>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Завершен
+            </Button>
+          )}
+          {challenge.status === "upcoming" && (
+            <Button variant="outline" className="flex-1 text-sm lg:text-base bg-transparent" disabled>
+              <Clock className="w-4 h-4 mr-2" />
+              Скоро
+            </Button>
+          )}
+          <Button variant="outline" size="sm" className="text-xs lg:text-sm bg-transparent">
+            Подробнее
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 lg:h-16 lg:w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Загрузка челленджей...</p>
+        </div>
+      </div>
+    )
   }
+
+  const activeChallenges = challenges.filter((c) => c.status === "active")
+  const completedChallenges = challenges.filter((c) => c.status === "completed")
+  const upcomingChallenges = challenges.filter((c) => c.status === "upcoming")
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Link href="/dashboard/student">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Вернуться к панели
-            </Button>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Target className="h-6 w-6 text-blue-600" />
-            <h1 className="text-xl font-bold">Эко-челленджи</h1>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      {/* Mobile Header */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:hidden">
+        <div className="container flex h-14 items-center">
+          <Button variant="ghost" size="icon" asChild className="mr-2">
+            <Link href="/dashboard/student">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div className="flex-1">
+            <h1 className="font-semibold text-sm">Челленджи</h1>
           </div>
+          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <nav className="flex flex-col space-y-4">
+                <Link href="/dashboard/student" className="text-sm font-medium">
+                  Главная
+                </Link>
+                <Link href="/actions/log" className="text-sm font-medium">
+                  Мои действия
+                </Link>
+                <Link href="/leaderboard" className="text-sm font-medium">
+                  Рейтинг
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Featured Weekly Challenge */}
-        {weeklyChallenge ? (
-          <Card className="mb-8 bg-gradient-to-r from-blue-50 via-cyan-50 to-green-50 border-blue-200">
-            <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                <Badge className="bg-blue-600">Еженедельный челлендж</Badge>
-                <Badge variant="outline">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {translateTime(weeklyChallenge.timeLeft)} осталось
-                </Badge>
-              </div>
-              <CardTitle className="flex items-center gap-3">
-                <weeklyChallenge.icon className="h-6 w-6 text-blue-600" />
-                {weeklyChallenge.title}
-              </CardTitle>
-              <CardDescription className="text-base">
-                {weeklyChallenge.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Прогресс: {weeklyChallenge.current}/{weeklyChallenge.target}</span>
-                    <span>{Math.round((weeklyChallenge.current / weeklyChallenge.target) * 100)}%</span>
-                  </div>
-                  <Progress value={(weeklyChallenge.current / weeklyChallenge.target) * 100} className="h-3" />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Trophy className="h-4 w-4" />
-                      <span>{weeklyChallenge.points} очков</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      <span>{weeklyChallenge.participants} участников</span>
-                    </div>
-                  </div>
-                  <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
-                    Продолжить челлендж
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="mb-8 border-dashed">
-            <CardContent className="text-center py-12">
-              <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">Нет активного еженедельного челленджа</h3>
-              <p className="text-gray-500">Еженедельные челленджи будут появляться здесь</p>
-            </CardContent>
-          </Card>
-        )}
+      {/* Desktop Header */}
+      <header className="hidden lg:block sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center">
+          <div className="mr-4 flex">
+            <Link href="/dashboard/student" className="mr-6 flex items-center space-x-2">
+              <div className="h-8 w-8 bg-green-600 rounded"></div>
+              <span className="font-bold">EcoSchool</span>
+            </Link>
+          </div>
+          <nav className="flex items-center space-x-6 text-sm font-medium">
+            <Link href="/dashboard/student">Главная</Link>
+            <Link href="/actions/log">Мои действия</Link>
+            <Link href="/leaderboard">Рейтинг</Link>
+            <Link href="/challenges" className="text-green-600">
+              Челленджи
+            </Link>
+          </nav>
+        </div>
+      </header>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="active">Активные челленджи</TabsTrigger>
-            <TabsTrigger value="completed">Завершенные</TabsTrigger>
-            <TabsTrigger value="upcoming">Предстоящие</TabsTrigger>
+      <div className="container mx-auto px-4 py-6 lg:py-8">
+        <div className="text-center mb-6 lg:mb-8">
+          <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 mb-2 lg:mb-4">🎯 Эко-челленджи</h1>
+          <p className="text-sm lg:text-xl text-gray-600">Участвуйте в челленджах и зарабатывайте баллы</p>
+        </div>
+
+        <Tabs defaultValue="active" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6 lg:mb-8">
+            <TabsTrigger value="active" className="text-xs lg:text-sm">
+              Активные ({activeChallenges.length})
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="text-xs lg:text-sm">
+              Завершенные ({completedChallenges.length})
+            </TabsTrigger>
+            <TabsTrigger value="upcoming" className="text-xs lg:text-sm">
+              Скоро ({upcomingChallenges.length})
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="active">
-            {activeChallenges.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">Нет активных челленджей</h3>
-                  <p className="text-gray-500">Активные челленджи появятся здесь когда их создадут учителя</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {activeChallenges.map((challenge) => {
-                  const IconComponent = challenge.icon
-                  const progress = (challenge.current / challenge.target) * 100
-                  
-                  return (
-                    <Card key={challenge.id} className="hover:shadow-lg transition-shadow">
-                      <CardHeader>
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge className={getDifficultyColor(challenge.difficulty)}>
-                            {
-                              challenge.difficulty === "Easy" ? "Легко" :
-                              challenge.difficulty === "Medium" ? "Средне" :
-                              challenge.difficulty === "Hard" ? "Сложно" :
-                              challenge.difficulty
-                            }
-                          </Badge>
-                          <Badge variant="outline">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {translateTime(challenge.timeLeft)}
-                          </Badge>
-                        </div>
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                          <IconComponent className="h-5 w-5 text-blue-600" />
-                          {challenge.title}
-                        </CardTitle>
-                        <CardDescription>
-                          {challenge.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div>
-                            <div className="flex justify-between text-sm mb-2">
-                              <span>Прогресс: {challenge.current}/{challenge.target}</span>
-                              <span>{Math.round(progress)}%</span>
-                            </div>
-                            <Progress value={progress} />
-                          </div>
-                          
-                          <div className="flex items-center justify-between text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Trophy className="h-4 w-4" />
-                              <span>{challenge.points} очков</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              <span>{challenge.participants}</span>
-                            </div>
-                          </div>
-                          
-                          <Button 
-                            className="w-full" 
-                            variant={progress > 0 ? "default" : "outline"}
-                            onClick={() => joinChallenge(challenge.id)}
-                          >
-                            {progress > 0 ? "Продолжить" : "Присоединиться к челленджу"}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-            )}
+          <TabsContent value="active" className="space-y-4 lg:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+              {activeChallenges.map(renderChallenge)}
+            </div>
           </TabsContent>
 
-          <TabsContent value="completed">
-            <div className="space-y-4">
-              {completedChallenges.map((challenge) => {
-                const IconComponent = challenge.icon
-                
-                return (
-                  <Card key={challenge.id} className="bg-green-50 border-green-200">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-green-100 rounded-full">
-                          <IconComponent className="h-6 w-6 text-green-600" />
-                        </div>
-                        
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold">{challenge.title}</h3>
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                          </div>
-                          <p className="text-sm text-gray-600 mb-2">{challenge.description}</p>
-                          <p className="text-xs text-gray-500">Completed {translateDate(challenge.completedDate)}</p>
-                        </div>
-                        
-                        <div className="text-right">
-                          <Badge className="bg-green-600">
-                            +{challenge.points} очков
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-              
-              {completedChallenges.length === 0 && (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-600 mb-2">Пока нет завершенных челленджей</h3>
-                    <p className="text-gray-500">Завершите свой первый челлендж, чтобы увидеть его здесь!</p>
+          <TabsContent value="completed" className="space-y-4 lg:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+              {completedChallenges.map(renderChallenge)}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="upcoming" className="space-y-4 lg:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+              {upcomingChallenges.length > 0 ? (
+                upcomingChallenges.map(renderChallenge)
+              ) : (
+                <Card className="col-span-full">
+                  <CardContent className="text-center py-8 lg:py-12">
+                    <Trophy className="w-12 h-12 lg:w-16 lg:h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg lg:text-xl font-semibold text-gray-600 mb-2">
+                      Новые челленджи скоро появятся
+                    </h3>
+                    <p className="text-sm lg:text-base text-gray-500">
+                      Следите за обновлениями и будьте готовы к новым вызовам!
+                    </p>
                   </CardContent>
                 </Card>
               )}
             </div>
-          </TabsContent>
-
-          <TabsContent value="upcoming">
-            {upcomingChallenges.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">Нет предстоящих челленджей</h3>
-                  <p className="text-gray-500">Предстоящие челленджи будут отображаться здесь</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 gap-6">
-                {upcomingChallenges.map((challenge) => {
-                  const IconComponent = challenge.icon
-                  
-                  return (
-                    <Card key={challenge.id} className="border-dashed">
-                      <CardHeader>
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge className={getDifficultyColor(challenge.difficulty)}>
-                            {
-                              challenge.difficulty === "Easy" ? "Легко" :
-                              challenge.difficulty === "Medium" ? "Средне" :
-                              challenge.difficulty === "Hard" ? "Сложно" :
-                              challenge.difficulty
-                            }
-                          </Badge>
-                          <Badge variant="outline">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {translateStartDate(challenge.startDate)}
-                          </Badge>
-                        </div>
-                        <CardTitle className="flex items-center gap-2">
-                          <IconComponent className="h-5 w-5 text-gray-500" />
-                          {challenge.title}
-                        </CardTitle>
-                        <CardDescription>
-                          {challenge.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Trophy className="h-4 w-4" />
-                              <span>{challenge.points} очков</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              <span>{challenge.duration}</span>
-                            </div>
-                          </div>
-                          
-                          <Button className="w-full" variant="outline" disabled>
-                            Скоро
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-            )}
           </TabsContent>
         </Tabs>
       </div>
