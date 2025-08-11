@@ -1,7 +1,7 @@
--- WARNING: This will delete all data in the database
--- Only run this in development!
+-- ⚠️  ВНИМАНИЕ: Этот скрипт полностью удаляет все данные!
+-- Используйте только для разработки или тестирования
 
--- Drop all tables in reverse dependency order
+-- Drop all tables in correct order (reverse dependency order)
 DROP TABLE IF EXISTS user_badges CASCADE;
 DROP TABLE IF EXISTS badges CASCADE;
 DROP TABLE IF EXISTS user_challenges CASCADE;
@@ -25,7 +25,7 @@ DROP SEQUENCE IF EXISTS badges_id_seq CASCADE;
 DROP SEQUENCE IF EXISTS user_badges_id_seq CASCADE;
 DROP SEQUENCE IF EXISTS teacher_invites_id_seq CASCADE;
 
--- Reset is complete - now run the create tables script
+-- Now recreate everything from scratch
 
 -- Create schools table
 CREATE TABLE schools (

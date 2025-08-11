@@ -1,15 +1,14 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Recycle, Droplets, Trash2, Clock } from "lucide-react"
+import { ArrowLeft, Camera, Upload, Recycle, Droplets, Trash2, Clock } from 'lucide-react'
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -38,13 +37,13 @@ export default function LogActionPage() {
 
   const fetchEcoActions = async () => {
     try {
-      const response = await fetch("/api/eco-actions")
+      const response = await fetch('/api/eco-actions')
       if (response.ok) {
         const actions = await response.json()
         setEcoActions(actions)
       }
     } catch (error) {
-      console.error("Error fetching eco actions:", error)
+      console.error('Error fetching eco actions:', error)
     }
   }
 
@@ -56,86 +55,82 @@ export default function LogActionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const action = ecoActions.find((a) => a.id === Number.parseInt(selectedAction))
+    
+    const action = ecoActions.find(a => a.id === parseInt(selectedAction))
     if (!action) return
 
     setLoading(true)
 
     try {
-      const userData = localStorage.getItem("user")
+      const userData = localStorage.getItem('user')
       if (!userData) {
-        throw new Error("User not found")
+        throw new Error('User not found')
       }
 
       const user = JSON.parse(userData)
 
-      const response = await fetch("/api/user-actions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/user-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: user.id,
           action_id: action.id,
-          quantity: Number.parseInt(quantity),
+          quantity: parseInt(quantity),
           description: description || null,
-          photo_url: null, // TODO: implement photo upload
-        }),
+          photo_url: null // TODO: implement photo upload
+        })
       })
 
       if (!response.ok) {
-        throw new Error("Failed to log action")
+        throw new Error('Failed to log action')
       }
 
       // Calculate total points (but don't add them yet - teacher needs to approve)
-      const totalPoints = action.points * Number.parseInt(quantity)
+      const totalPoints = action.points * parseInt(quantity)
 
       // Show success message and redirect
       alert(`Действие записано! Ожидайте подтверждения учителя для получения ${totalPoints} очков.`)
-      router.push("/dashboard/student")
+      router.push('/dashboard/student')
     } catch (error) {
-      console.error("Error logging action:", error)
-      alert("Ошибка при записи действия. Попробуйте еще раз.")
+      console.error('Error logging action:', error)
+      alert('Ошибка при записи действия. Попробуйте еще раз.')
     } finally {
       setLoading(false)
     }
   }
 
-  const selectedActionData = ecoActions.find((a) => a.id === Number.parseInt(selectedAction))
+  const selectedActionData = ecoActions.find(a => a.id === parseInt(selectedAction))
 
   const getIconComponent = (iconName?: string) => {
     switch (iconName) {
-      case "Recycle":
-        return Recycle
-      case "Trash2":
-        return Trash2
-      case "Droplets":
-        return Droplets
-      default:
-        return Recycle
+      case 'Recycle': return Recycle
+      case 'Trash2': return Trash2
+      case 'Droplets': return Droplets
+      default: return Recycle
     }
   }
 
   const getQuantityOptions = (unit?: string) => {
     switch (unit) {
-      case "кг":
-        return [0.5, 1, 2, 3, 5, 10].map((num) => ({
+      case 'кг':
+        return [0.5, 1, 2, 3, 5, 10].map(num => ({
           value: num.toString(),
-          label: `${num} кг`,
+          label: `${num} кг`
         }))
-      case "шт":
-        return [1, 2, 5, 10, 15, 20, 50].map((num) => ({
+      case 'шт':
+        return [1, 2, 5, 10, 15, 20, 50].map(num => ({
           value: num.toString(),
-          label: `${num} шт`,
+          label: `${num} шт`
         }))
-      case "раз":
-        return [1, 2, 3, 5, 10].map((num) => ({
+      case 'раз':
+        return [1, 2, 3, 5, 10].map(num => ({
           value: num.toString(),
-          label: `${num} раз`,
+          label: `${num} раз`
         }))
       default:
-        return [1, 2, 3, 4, 5].map((num) => ({
+        return [1, 2, 3, 4, 5].map(num => ({
           value: num.toString(),
-          label: num.toString(),
+          label: num.toString()
         }))
     }
   }
@@ -182,8 +177,8 @@ export default function LogActionPage() {
                         onClick={() => setSelectedAction(action.id.toString())}
                         className={`p-4 border rounded-lg text-left transition-all ${
                           selectedAction === action.id.toString()
-                            ? "border-green-500 bg-green-50"
-                            : "border-gray-200 hover:border-gray-300"
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className="flex items-center gap-3 mb-2">
@@ -191,9 +186,7 @@ export default function LogActionPage() {
                           <span className="font-medium">{action.name}</span>
                         </div>
                         <p className="text-sm text-gray-600 mb-2">{action.description}</p>
-                        <Badge variant="secondary">
-                          +{action.points} очков за {action.unit}
-                        </Badge>
+                        <Badge variant="secondary">+{action.points} очков за {action.unit}</Badge>
                       </button>
                     )
                   })}
@@ -218,8 +211,7 @@ export default function LogActionPage() {
                       </SelectContent>
                     </Select>
                     <p className="text-sm text-gray-600">
-                      Потенциальные очки: {selectedActionData.points * Number.parseFloat(quantity)} (после
-                      подтверждения)
+                      Потенциальные очки: {selectedActionData.points * parseFloat(quantity)} (после подтверждения)
                     </p>
                   </div>
 
@@ -238,12 +230,16 @@ export default function LogActionPage() {
                   {/* Submit Button */}
                   <div className="flex gap-3">
                     <Link href="/dashboard/student" className="flex-1">
-                      <Button type="button" variant="outline" className="w-full bg-transparent">
+                      <Button type="button" variant="outline" className="w-full">
                         Отмена
                       </Button>
                     </Link>
-                    <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={loading}>
-                      {loading ? "Отправляем..." : "Отправить на проверку"}
+                    <Button 
+                      type="submit" 
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                      disabled={loading}
+                    >
+                      {loading ? 'Отправляем...' : 'Отправить на проверку'}
                     </Button>
                   </div>
                 </>

@@ -1,30 +1,24 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { NextRequest, NextResponse } from 'next/server'
+import { sql } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
     // Only allow in development mode
-    if (process.env.NODE_ENV !== "development") {
-      return NextResponse.json(
-        {
-          error: "Database reset is only allowed in development mode",
-        },
-        { status: 403 },
-      )
+    if (process.env.NODE_ENV !== 'development') {
+      return NextResponse.json({ 
+        error: 'Database reset is only allowed in development mode' 
+      }, { status: 403 })
     }
 
     // Check for confirmation
     const { confirm } = await request.json()
-    if (confirm !== "RESET_DATABASE") {
-      return NextResponse.json(
-        {
-          error: 'Invalid confirmation. Send { "confirm": "RESET_DATABASE" }',
-        },
-        { status: 400 },
-      )
+    if (confirm !== 'RESET_DATABASE') {
+      return NextResponse.json({ 
+        error: 'Invalid confirmation. Send { "confirm": "RESET_DATABASE" }' 
+      }, { status: 400 })
     }
 
-    console.log("🔥 Starting database reset...")
+    console.log('🔥 Starting database reset...')
 
     // Drop all tables in correct order
     await sql`DROP TABLE IF EXISTS user_badges CASCADE`
@@ -38,7 +32,7 @@ export async function POST(request: NextRequest) {
     await sql`DROP TABLE IF EXISTS classes CASCADE`
     await sql`DROP TABLE IF EXISTS schools CASCADE`
 
-    console.log("🗑️ All tables dropped")
+    console.log('🗑️ All tables dropped')
 
     // Recreate schools table
     await sql`
@@ -190,7 +184,7 @@ export async function POST(request: NextRequest) {
       )
     `
 
-    console.log("🏗️ All tables recreated")
+    console.log('🏗️ All tables recreated')
 
     // Create indexes
     await sql`CREATE INDEX idx_users_email ON users(email)`
@@ -207,7 +201,7 @@ export async function POST(request: NextRequest) {
     await sql`CREATE INDEX idx_challenges_school_id ON challenges(school_id)`
     await sql`CREATE INDEX idx_user_badges_user_id ON user_badges(user_id)`
 
-    console.log("📊 Indexes created")
+    console.log('📊 Indexes created')
 
     // Insert default eco actions
     await sql`
@@ -233,37 +227,27 @@ export async function POST(request: NextRequest) {
       ('Green Master', 'Мастер экологии', 'Crown', 500)
     `
 
-    console.log("🌱 Default data inserted")
-    console.log("✅ Database reset completed successfully!")
+    console.log('🌱 Default data inserted')
+    console.log('✅ Database reset completed successfully!')
 
-    return NextResponse.json({
+    return NextResponse.json({ 
       success: true,
-      message: "База данных успешно сброшена и пересоздана!",
+      message: 'База данных успешно сброшена и пересоздана!',
       tables_created: [
-        "schools",
-        "users",
-        "classes",
-        "eco_actions",
-        "user_actions",
-        "challenges",
-        "user_challenges",
-        "badges",
-        "user_badges",
-        "teacher_invites",
+        'schools', 'users', 'classes', 'eco_actions', 'user_actions',
+        'challenges', 'user_challenges', 'badges', 'user_badges', 'teacher_invites'
       ],
       default_data: {
         eco_actions: 8,
-        badges: 6,
-      },
+        badges: 6
+      }
     })
+
   } catch (error) {
-    console.error("❌ Database reset failed:", error)
-    return NextResponse.json(
-      {
-        error: "Database reset failed",
-        details: error.message,
-      },
-      { status: 500 },
-    )
+    console.error('❌ Database reset failed:', error)
+    return NextResponse.json({ 
+      error: 'Database reset failed',
+      details: error.message 
+    }, { status: 500 })
   }
 }

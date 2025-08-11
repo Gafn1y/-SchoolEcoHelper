@@ -7,10 +7,8 @@ ALTER TABLE eco_actions ADD COLUMN IF NOT EXISTS unit VARCHAR(20) DEFAULT 'ра�
 -- Add missing columns to classes table
 ALTER TABLE classes ADD COLUMN IF NOT EXISTS capacity INTEGER DEFAULT 30;
 
--- Add missing columns that might be needed
-
--- Ensure user_actions table has all required columns
-ALTER TABLE user_actions ADD COLUMN IF NOT EXISTS reviewed_by INTEGER REFERENCES users(id);
+-- Add missing columns to user_actions table
+ALTER TABLE user_actions ADD COLUMN IF NOT EXISTS reviewed_by INTEGER;
 ALTER TABLE user_actions ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP;
 
 -- Add foreign key constraints after columns exist
@@ -42,10 +40,6 @@ UPDATE eco_actions SET unit = 'кг' WHERE name LIKE '%бумаги%' AND (unit 
 UPDATE eco_actions SET unit = 'шт' WHERE name LIKE '%бутылки%' AND (unit IS NULL OR unit = 'раз');
 UPDATE eco_actions SET unit = 'шт' WHERE name LIKE '%деревьев%' AND (unit IS NULL OR unit = 'раз');
 
--- Add indexes for better performance on new columns
+-- Create indexes if they don't exist
 CREATE INDEX IF NOT EXISTS idx_users_class_id ON users(class_id);
 CREATE INDEX IF NOT EXISTS idx_user_actions_reviewed_by ON user_actions(reviewed_by);
-CREATE INDEX IF NOT EXISTS idx_user_actions_status ON user_actions(status);
-
--- Update any existing user_actions to have proper status
-UPDATE user_actions SET status = 'pending' WHERE status IS NULL;

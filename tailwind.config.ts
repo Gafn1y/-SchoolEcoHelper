@@ -2,13 +2,7 @@ import type { Config } from "tailwindcss"
 
 const config: Config = {
   darkMode: ["class"],
-  content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}", "*.{js,ts,jsx,tsx,mdx}"],
   prefix: "",
   theme: {
     container: {
@@ -54,41 +48,41 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))",
         },
         // Кастомные цвета из логотипа
-        "eco-blue": {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#1e40af", // Основной синий
-          700: "#1e3a8a",
-          800: "#1e3a8a",
-          900: "#1e3a8a",
+        'eco-blue': {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#1e40af', // Основной синий
+          700: '#1e3a8a',
+          800: '#1e3a8a',
+          900: '#1e3a8a',
         },
-        "eco-cyan": {
-          50: "#ecfeff",
-          100: "#cffafe",
-          200: "#a5f3fc",
-          300: "#67e8f9",
-          400: "#22d3ee",
-          500: "#0ea5e9", // Основной голубой
-          600: "#0284c7",
-          700: "#0369a1",
-          800: "#075985",
-          900: "#0c4a6e",
+        'eco-cyan': {
+          50: '#ecfeff',
+          100: '#cffafe',
+          200: '#a5f3fc',
+          300: '#67e8f9',
+          400: '#22d3ee',
+          500: '#0ea5e9', // Основной голубой
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
         },
-        "eco-green": {
-          50: "#f7fee7",
-          100: "#ecfccb",
-          200: "#d9f99d",
-          300: "#bef264",
-          400: "#a3e635",
-          500: "#84cc16",
-          600: "#65a30d", // Основной зеленый
-          700: "#4d7c0f",
-          800: "#365314",
-          900: "#1a2e05",
+        'eco-green': {
+          50: '#f7fee7',
+          100: '#ecfccb',
+          200: '#d9f99d',
+          300: '#bef264',
+          400: '#a3e635',
+          500: '#84cc16',
+          600: '#65a30d', // Основной зеленый
+          700: '#4d7c0f',
+          800: '#365314',
+          900: '#1a2e05',
         },
       },
       borderRadius: {
