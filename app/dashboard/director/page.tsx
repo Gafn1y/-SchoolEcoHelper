@@ -338,91 +338,120 @@ export default function DirectorDashboard() {
   }
 
   if (!user) {
-    return <div>Loading...</div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    )
   }
 
   // Show school selector if multiple schools or no school selected
   if (showSchoolSelector || (!selectedSchool && schools.length > 0)) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-2xl">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <img src="/logo-new.png" alt="EcoSchool" className="h-12 w-12" />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-3xl border-0 shadow-2xl">
+          <CardHeader className="text-center bg-gradient-to-r from-purple-100 to-blue-100 rounded-t-lg">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="p-3 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl">
+                <img src="/logo-new.png" alt="EcoSchool" className="h-12 w-12" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-purple-900">EcoSchool</h1>
-                <p className="text-sm text-gray-600">Панель директора</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  EcoSchool
+                </h1>
+                <p className="text-gray-600 font-medium">Панель директора</p>
               </div>
             </div>
-            <CardTitle>Выберите школу для управления</CardTitle>
-            <CardDescription>У вас есть доступ к управлению несколькими школами</CardDescription>
+            <CardTitle className="text-2xl text-gray-800">Выберите школу для управления</CardTitle>
+            <CardDescription className="text-gray-600">
+              У вас есть доступ к управлению несколькими школами
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6 p-6">
             {schools.map((school) => (
               <Card
                 key={school.id}
-                className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-purple-200"
+                className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-purple-300 bg-gradient-to-r from-white to-gray-50"
                 onClick={() => handleSchoolSelect(school)}
               >
-                <CardContent className="p-4">
+                <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-lg">{school.name}</h3>
-                      {school.address && <p className="text-sm text-gray-600">{school.address}</p>}
+                      <h3 className="font-bold text-xl text-gray-800">{school.name}</h3>
+                      {school.address && <p className="text-gray-600 mt-1">{school.address}</p>}
                     </div>
-                    <Building className="h-8 w-8 text-purple-600" />
+                    <div className="p-3 bg-purple-100 rounded-full">
+                      <Building className="h-8 w-8 text-purple-600" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
 
-            <div className="pt-4 border-t">
-              <Button onClick={() => setShowCreateSchool(true)} className="w-full" variant="outline">
-                <Plus className="h-4 w-4 mr-2" />
+            <div className="pt-6 border-t">
+              <Button
+                onClick={() => setShowCreateSchool(true)}
+                className="w-full h-12 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white border-0"
+                size="lg"
+              >
+                <Plus className="h-5 w-5 mr-3" />
                 Создать новую школу
               </Button>
             </div>
 
             {showCreateSchool && (
-              <Card className="border-green-200">
+              <Card className="border-2 border-green-200 bg-gradient-to-r from-green-50 to-teal-50">
                 <CardHeader>
                   <CardTitle className="text-green-800">Создать новую школу</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleCreateSchool} className="space-y-4">
                     <div>
-                      <Label htmlFor="schoolName">Название школы</Label>
+                      <Label htmlFor="schoolName" className="font-medium">
+                        Название школы
+                      </Label>
                       <Input
                         id="schoolName"
                         value={newSchoolData.name}
                         onChange={(e) => setNewSchoolData({ ...newSchoolData, name: e.target.value })}
                         placeholder="Введите название школы"
+                        className="mt-1"
                         required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="schoolAddress">Адрес школы</Label>
+                      <Label htmlFor="schoolAddress" className="font-medium">
+                        Адрес школы
+                      </Label>
                       <Input
                         id="schoolAddress"
                         value={newSchoolData.address}
                         onChange={(e) => setNewSchoolData({ ...newSchoolData, address: e.target.value })}
                         placeholder="Введите адрес школы"
+                        className="mt-1"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="totalClasses">Количество классов</Label>
+                      <Label htmlFor="totalClasses" className="font-medium">
+                        Количество классов
+                      </Label>
                       <Input
                         id="totalClasses"
                         type="number"
                         value={newSchoolData.total_classes}
                         onChange={(e) => setNewSchoolData({ ...newSchoolData, total_classes: e.target.value })}
                         placeholder="Введите количество классов"
+                        className="mt-1"
                         min="1"
                         required
                       />
                     </div>
-                    <div className="flex space-x-2">
-                      <Button type="submit" disabled={loading}>
+                    <div className="flex space-x-3 pt-4">
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white border-0"
+                      >
                         {loading ? "Создание..." : "Создать школу"}
                       </Button>
                       <Button type="button" variant="outline" onClick={() => setShowCreateSchool(false)}>
@@ -442,53 +471,70 @@ export default function DirectorDashboard() {
   // Show message if no schools exist
   if (schools.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <img src="/logo-new.png" alt="EcoSchool" className="h-12 w-12" />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-lg border-0 shadow-2xl">
+          <CardHeader className="text-center bg-gradient-to-r from-purple-100 to-blue-100 rounded-t-lg">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="p-3 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl">
+                <img src="/logo-new.png" alt="EcoSchool" className="h-12 w-12" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-purple-900">EcoSchool</h1>
-                <p className="text-sm text-gray-600">Панель директора</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  EcoSchool
+                </h1>
+                <p className="text-gray-600 font-medium">Панель директора</p>
               </div>
             </div>
-            <CardTitle>Создайте свою первую школу</CardTitle>
-            <CardDescription>Для начала работы необходимо создать школу</CardDescription>
+            <CardTitle className="text-2xl text-gray-800">Создайте свою первую школу</CardTitle>
+            <CardDescription className="text-gray-600">Для начала работы необходимо создать школу</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <form onSubmit={handleCreateSchool} className="space-y-4">
               <div>
-                <Label htmlFor="schoolName">Название школы</Label>
+                <Label htmlFor="schoolName" className="font-medium">
+                  Название школы
+                </Label>
                 <Input
                   id="schoolName"
                   value={newSchoolData.name}
                   onChange={(e) => setNewSchoolData({ ...newSchoolData, name: e.target.value })}
                   placeholder="Введите название школы"
+                  className="mt-1"
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="schoolAddress">Адрес школы</Label>
+                <Label htmlFor="schoolAddress" className="font-medium">
+                  Адрес школы
+                </Label>
                 <Input
                   id="schoolAddress"
                   value={newSchoolData.address}
                   onChange={(e) => setNewSchoolData({ ...newSchoolData, address: e.target.value })}
                   placeholder="Введите адрес школы"
+                  className="mt-1"
                 />
               </div>
               <div>
-                <Label htmlFor="totalClasses">Количество классов</Label>
+                <Label htmlFor="totalClasses" className="font-medium">
+                  Количество классов
+                </Label>
                 <Input
                   id="totalClasses"
                   type="number"
                   value={newSchoolData.total_classes}
                   onChange={(e) => setNewSchoolData({ ...newSchoolData, total_classes: e.target.value })}
                   placeholder="Введите количество классов"
+                  className="mt-1"
                   min="1"
                   required
                 />
               </div>
-              <Button type="submit" disabled={loading} className="w-full">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-12 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0 mt-6"
+              >
                 {loading ? "Создание..." : "Создать школу"}
               </Button>
             </form>
@@ -499,39 +545,54 @@ export default function DirectorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
       {/* Header */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/logo-new.png" alt="EcoSchool" className="h-12 w-12" />
-            <div>
-              <h1 className="text-2xl font-bold text-purple-900">EcoSchool</h1>
-              <p className="text-sm text-gray-600">Панель директора</p>
+      <div className="bg-white shadow-lg border-b border-gray-100">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl">
+                <img src="/logo-new.png" alt="EcoSchool" className="h-10 w-10" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  EcoSchool
+                </h1>
+                <p className="text-gray-600 font-medium">Панель директора</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            {schools.length > 1 && (
-              <Button variant="outline" onClick={() => setShowSchoolSelector(true)} className="flex items-center gap-2">
-                <Building className="h-4 w-4" />
-                {selectedSchool?.name}
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            )}
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Добро пожаловать,</p>
-              <p className="font-semibold">{user.name}</p>
-              {selectedSchool && <p className="text-xs text-gray-500">{selectedSchool.name}</p>}
-            </div>
-            <div className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-indigo-100 px-3 py-1 rounded-full">
-              <Building className="h-4 w-4 text-purple-600" />
-              <span className="font-semibold text-purple-800">Директор</span>
+            <div className="flex items-center gap-6">
+              {schools.length > 1 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSchoolSelector(true)}
+                  className="flex items-center gap-2 border-2 border-purple-200 hover:border-purple-300"
+                >
+                  <Building className="h-4 w-4" />
+                  {selectedSchool?.name}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              )}
+              <div className="text-right">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+                  <p className="text-sm text-gray-500">Добро пожаловать,</p>
+                </div>
+                <p className="font-bold text-gray-800 text-lg">{user.name}</p>
+                {selectedSchool && <p className="text-sm text-gray-500">{selectedSchool.name}</p>}
+              </div>
+              <div className="bg-gradient-to-r from-purple-100 to-blue-100 px-4 py-2 rounded-full border-2 border-purple-200">
+                <div className="flex items-center gap-2">
+                  <Building className="h-5 w-5 text-purple-600" />
+                  <span className="font-bold text-purple-800">Директор</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-6 py-8">
         {error && (
           <Alert className="mb-6 border-red-200 bg-red-50">
             <AlertDescription className="text-red-800">{error}</AlertDescription>
@@ -540,92 +601,135 @@ export default function DirectorDashboard() {
 
         {/* Stats Overview */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Всего учеников</CardTitle>
-              <Users className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalStudents}</div>
-              <p className="text-xs text-muted-foreground">Активных учеников</p>
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-600 font-medium text-sm">Всего учеников</p>
+                  <p className="text-3xl font-bold text-blue-700">{stats.totalStudents}</p>
+                  <p className="text-blue-500 text-xs">Активных учеников</p>
+                </div>
+                <div className="p-3 bg-blue-200 rounded-full">
+                  <Users className="h-8 w-8 text-blue-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Учителей</CardTitle>
-              <GraduationCap className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalTeachers}</div>
-              <p className="text-xs text-muted-foreground">Классных руководителей</p>
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-600 font-medium text-sm">Учителей</p>
+                  <p className="text-3xl font-bold text-green-700">{stats.totalTeachers}</p>
+                  <p className="text-green-500 text-xs">Классных руководителей</p>
+                </div>
+                <div className="p-3 bg-green-200 rounded-full">
+                  <GraduationCap className="h-8 w-8 text-green-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Классов</CardTitle>
-              <Building className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalClasses}</div>
-              <p className="text-xs text-muted-foreground">Активных классов</p>
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-600 font-medium text-sm">Классов</p>
+                  <p className="text-3xl font-bold text-purple-700">{stats.totalClasses}</p>
+                  <p className="text-purple-500 text-xs">Активных классов</p>
+                </div>
+                <div className="p-3 bg-purple-200 rounded-full">
+                  <Building className="h-8 w-8 text-purple-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Очки школы</CardTitle>
-              <Star className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalPoints}</div>
-              <p className="text-xs text-muted-foreground">Общие очки школы</p>
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-yellow-100">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-yellow-600 font-medium text-sm">Очки школы</p>
+                  <p className="text-3xl font-bold text-yellow-700">{stats.totalPoints}</p>
+                  <p className="text-yellow-500 text-xs">Общие очки школы</p>
+                </div>
+                <div className="p-3 bg-yellow-200 rounded-full">
+                  <Star className="h-8 w-8 text-yellow-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
         <Tabs defaultValue="classes" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="classes">Классы ({stats.totalClasses})</TabsTrigger>
-            <TabsTrigger value="teachers">Учителя ({stats.totalTeachers})</TabsTrigger>
-            <TabsTrigger value="overview">Обзор школы</TabsTrigger>
+          <TabsList className="bg-white shadow-lg border-0 p-1 rounded-xl">
+            <TabsTrigger
+              value="classes"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-400 data-[state=active]:to-blue-500 data-[state=active]:text-white rounded-lg px-6 py-2 font-medium"
+            >
+              Классы ({stats.totalClasses})
+            </TabsTrigger>
+            <TabsTrigger
+              value="teachers"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-400 data-[state=active]:to-green-500 data-[state=active]:text-white rounded-lg px-6 py-2 font-medium"
+            >
+              Учителя ({stats.totalTeachers})
+            </TabsTrigger>
+            <TabsTrigger
+              value="overview"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-400 data-[state=active]:to-purple-500 data-[state=active]:text-white rounded-lg px-6 py-2 font-medium"
+            >
+              Обзор школы
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="classes" className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               {/* Create Class Form */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Plus className="h-5 w-5" />
+              <Card className="border-0 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-lg">
+                  <CardTitle className="flex items-center gap-3 text-blue-700">
+                    <div className="p-2 bg-blue-200 rounded-lg">
+                      <Plus className="h-5 w-5 text-blue-600" />
+                    </div>
                     Создать новый класс
                   </CardTitle>
-                  <CardDescription>Добавьте новый класс в вашу школу</CardDescription>
+                  <CardDescription className="text-blue-600">Добавьте новый класс в вашу школу</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <form onSubmit={handleCreateClass} className="space-y-4">
                     <div>
-                      <Label htmlFor="className">Название класса</Label>
+                      <Label htmlFor="className" className="font-medium">
+                        Название класса
+                      </Label>
                       <Input
                         id="className"
                         value={newClassName}
                         onChange={(e) => setNewClassName(e.target.value)}
                         placeholder="например: 5А"
+                        className="mt-1"
                         required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="classGrade">Параллель</Label>
+                      <Label htmlFor="classGrade" className="font-medium">
+                        Параллель
+                      </Label>
                       <Input
                         id="classGrade"
                         value={newClassGrade}
                         onChange={(e) => setNewClassGrade(e.target.value)}
                         placeholder="например: 5"
+                        className="mt-1"
                         required
                       />
                     </div>
-                    <Button type="submit" disabled={loading} className="w-full">
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0"
+                    >
                       {loading ? "Создание..." : "Создать класс"}
                     </Button>
                   </form>
@@ -633,34 +737,43 @@ export default function DirectorDashboard() {
               </Card>
 
               {/* Invite Teacher Form */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Mail className="h-5 w-5" />
+              <Card className="border-0 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-teal-50 rounded-t-lg">
+                  <CardTitle className="flex items-center gap-3 text-green-700">
+                    <div className="p-2 bg-green-200 rounded-lg">
+                      <Mail className="h-5 w-5 text-green-600" />
+                    </div>
                     Пригласить учителя
                   </CardTitle>
-                  <CardDescription>Отправьте приглашение классному руководителю</CardDescription>
+                  <CardDescription className="text-green-600">
+                    Отправьте приглашение классному руководителю
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <form onSubmit={handleInviteTeacher} className="space-y-4">
                     <div>
-                      <Label htmlFor="inviteEmail">Email учителя</Label>
+                      <Label htmlFor="inviteEmail" className="font-medium">
+                        Email учителя
+                      </Label>
                       <Input
                         id="inviteEmail"
                         type="email"
                         value={inviteEmail}
                         onChange={(e) => setInviteEmail(e.target.value)}
                         placeholder="teacher@example.com"
+                        className="mt-1"
                         required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="classSelect">Класс</Label>
+                      <Label htmlFor="classSelect" className="font-medium">
+                        Класс
+                      </Label>
                       <select
                         id="classSelect"
                         value={selectedClassId}
                         onChange={(e) => setSelectedClassId(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md"
+                        className="w-full p-3 border border-gray-300 rounded-lg mt-1 bg-white"
                         required
                       >
                         <option value="">Выберите класс</option>
@@ -673,7 +786,11 @@ export default function DirectorDashboard() {
                           ))}
                       </select>
                     </div>
-                    <Button type="submit" disabled={loading} className="w-full">
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white border-0"
+                    >
                       {loading ? "Отправка..." : "Отправить приглашение"}
                     </Button>
                   </form>
@@ -682,42 +799,51 @@ export default function DirectorDashboard() {
             </div>
 
             {/* Classes List */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Классы школы</CardTitle>
-                <CardDescription>Список всех классов и их классных руководителей</CardDescription>
+            <Card className="border-0 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-lg">
+                <CardTitle className="text-indigo-700">Классы школы</CardTitle>
+                <CardDescription className="text-indigo-600">
+                  Список всех классов и их классных руководителей
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 {classes.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500 mb-2">Нет созданных классов</p>
-                    <p className="text-sm text-gray-400">Создайте первый класс для начала работы</p>
+                  <div className="text-center py-12">
+                    <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <Building className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <p className="text-gray-600 text-lg mb-2">Нет созданных классов</p>
+                    <p className="text-gray-500">Создайте первый класс для начала работы</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {classes.map((cls) => (
-                      <div key={cls.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                        <div className="p-2 bg-blue-100 rounded-full">
-                          <Building className="h-5 w-5 text-blue-600" />
+                      <div
+                        key={cls.id}
+                        className="flex items-center gap-6 p-6 border border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 hover:shadow-lg"
+                      >
+                        <div className="p-3 bg-blue-100 rounded-full">
+                          <Building className="h-6 w-6 text-blue-600" />
                         </div>
 
                         <div className="flex-1">
-                          <h3 className="font-semibold">{cls.name}</h3>
-                          <p className="text-sm text-gray-600">{cls.grade} класс</p>
+                          <h3 className="font-bold text-lg text-gray-800">{cls.name}</h3>
+                          <p className="text-gray-600">{cls.grade} класс</p>
                           {cls.teacher_name ? (
-                            <p className="text-sm text-green-600">Классный руководитель: {cls.teacher_name}</p>
+                            <p className="text-green-600 font-medium">Классный руководитель: {cls.teacher_name}</p>
                           ) : (
-                            <p className="text-sm text-orange-600">Нет классного руководителя</p>
+                            <p className="text-orange-600 font-medium">Нет классного руководителя</p>
                           )}
                         </div>
 
-                        <div className="text-right">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Users className="h-4 w-4 text-gray-500" />
-                            <span className="font-semibold">{cls.student_count} учеников</span>
+                        <div className="text-right space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-5 w-5 text-gray-500" />
+                            <span className="font-bold text-lg text-gray-800">{cls.student_count} учеников</span>
                           </div>
-                          <Badge variant="outline">{cls.grade} класс</Badge>
+                          <Badge className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 border-0">
+                            {cls.grade} класс
+                          </Badge>
                         </div>
                       </div>
                     ))}
@@ -729,59 +855,72 @@ export default function DirectorDashboard() {
 
           <TabsContent value="teachers" className="space-y-6">
             {/* Active Teachers */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5 text-green-600" />
+            <Card className="border-0 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-teal-50 rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-green-700">
+                  <div className="p-2 bg-green-200 rounded-lg">
+                    <GraduationCap className="h-6 w-6 text-green-600" />
+                  </div>
                   Активные учителя
                 </CardTitle>
-                <CardDescription>Учителя, которые уже присоединились к школе</CardDescription>
+                <CardDescription className="text-green-600">
+                  Учителя, которые уже присоединились к школе
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 {teachers.length === 0 ? (
-                  <div className="text-center py-8">
-                    <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500 mb-2">Нет активных учителей</p>
-                    <p className="text-sm text-gray-400">Отправьте приглашения учителям</p>
+                  <div className="text-center py-12">
+                    <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <GraduationCap className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <p className="text-gray-600 text-lg mb-2">Нет активных учителей</p>
+                    <p className="text-gray-500">Отправьте приглашения учителям</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {teachers.map((teacher) => (
-                      <div key={teacher.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50">
-                        <Avatar>
-                          <AvatarFallback className="bg-green-100 text-green-600">
+                      <div
+                        key={teacher.id}
+                        className="flex items-center gap-6 p-6 border border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 transition-all duration-200 hover:shadow-lg"
+                      >
+                        <Avatar className="h-14 w-14 border-3 border-green-200">
+                          <AvatarFallback className="bg-gradient-to-br from-green-100 to-teal-100 text-green-700 font-bold text-lg">
                             {getInitials(teacher.name)}
                           </AvatarFallback>
                         </Avatar>
 
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold">{teacher.name}</h3>
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="font-bold text-lg text-gray-800">{teacher.name}</h3>
                             {teacher.is_homeroom_teacher && (
-                              <Badge className="bg-green-100 text-green-800">Классный руководитель</Badge>
+                              <Badge className="bg-gradient-to-r from-green-100 to-teal-100 text-green-800 border-0">
+                                Классный руководитель
+                              </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600">{teacher.email}</p>
+                          <p className="text-gray-600 mb-1">{teacher.email}</p>
                           {teacher.class_name && (
-                            <p className="text-sm text-blue-600">
+                            <p className="text-blue-600 font-medium">
                               Класс: {teacher.class_name} ({teacher.grade} класс)
                             </p>
                           )}
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm text-gray-500">
                             Присоединился: {new Date(teacher.created_at).toLocaleDateString()}
                           </p>
                         </div>
 
-                        <div className="text-right">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Users className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm">{teacher.student_count} учеников</span>
+                        <div className="text-right space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-5 w-5 text-gray-500" />
+                            <span className="text-gray-700">{teacher.student_count} учеников</span>
                           </div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Star className="h-4 w-4 text-yellow-500" />
-                            <span className="text-sm">{teacher.points} очков</span>
+                          <div className="flex items-center gap-2">
+                            <Star className="h-5 w-5 text-yellow-500" />
+                            <span className="text-gray-700">{teacher.points} очков</span>
                           </div>
-                          <Badge variant="outline">Уровень {teacher.level}</Badge>
+                          <Badge className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border-0">
+                            Уровень {teacher.level}
+                          </Badge>
                         </div>
                       </div>
                     ))}
@@ -791,43 +930,52 @@ export default function DirectorDashboard() {
             </Card>
 
             {/* Teacher Invites */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-orange-600" />
+            <Card className="border-0 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-orange-50 to-red-50 rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-orange-700">
+                  <div className="p-2 bg-orange-200 rounded-lg">
+                    <Mail className="h-6 w-6 text-orange-600" />
+                  </div>
                   Приглашения учителей
                 </CardTitle>
-                <CardDescription>Отправленные приглашения и их статус</CardDescription>
+                <CardDescription className="text-orange-600">Отправленные приглашения и их статус</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 {teacherInvites.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500 mb-2">Нет отправленных приглашений</p>
-                    <p className="text-sm text-gray-400">Отправьте первое приглашение учителю</p>
+                  <div className="text-center py-12">
+                    <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <Mail className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <p className="text-gray-600 text-lg mb-2">Нет отправленных приглашений</p>
+                    <p className="text-gray-500">Отправьте первое приглашение учителю</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {teacherInvites.map((invite) => (
-                      <div key={invite.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                        <div className="p-2 bg-orange-100 rounded-full">
-                          <Mail className="h-5 w-5 text-orange-600" />
+                      <div
+                        key={invite.id}
+                        className="flex items-center gap-6 p-6 border border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 transition-all duration-200 hover:shadow-lg"
+                      >
+                        <div className="p-3 bg-orange-100 rounded-full">
+                          <Mail className="h-6 w-6 text-orange-600" />
                         </div>
 
                         <div className="flex-1">
-                          <h3 className="font-semibold">{invite.email}</h3>
-                          <p className="text-sm text-gray-600">Класс: {invite.class_name}</p>
-                          <p className="text-xs text-gray-500">
+                          <h3 className="font-bold text-lg text-gray-800">{invite.email}</h3>
+                          <p className="text-gray-600 mb-1">Класс: {invite.class_name}</p>
+                          <p className="text-sm text-gray-500">
                             Отправлено: {new Date(invite.created_at).toLocaleDateString()}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm text-gray-500">
                             Истекает: {new Date(invite.expires_at).toLocaleDateString()}
                           </p>
                         </div>
 
-                        <div className="text-right">
-                          <Badge className={getStatusColor(invite.status)}>{getStatusText(invite.status)}</Badge>
-                          <p className="text-xs text-gray-500 mt-1">Код: {invite.invite_code}</p>
+                        <div className="text-right space-y-2">
+                          <Badge className={`${getStatusColor(invite.status)} border-0 font-medium`}>
+                            {getStatusText(invite.status)}
+                          </Badge>
+                          <p className="text-sm text-gray-500">Код: {invite.invite_code}</p>
                         </div>
                       </div>
                     ))}
@@ -838,16 +986,23 @@ export default function DirectorDashboard() {
           </TabsContent>
 
           <TabsContent value="overview">
-            <Card>
-              <CardHeader>
-                <CardTitle>Обзор школы</CardTitle>
-                <CardDescription>Общая статистика и аналитика школы</CardDescription>
+            <Card className="border-0 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-purple-700">
+                  <div className="p-2 bg-purple-200 rounded-lg">
+                    <Trophy className="h-6 w-6 text-purple-600" />
+                  </div>
+                  Обзор школы
+                </CardTitle>
+                <CardDescription className="text-purple-600">Общая статистика и аналитика школы</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-2">Подробная аналитика школы</p>
-                  <p className="text-sm text-gray-400">Функция в разработке</p>
+              <CardContent className="p-6">
+                <div className="text-center py-12">
+                  <div className="p-4 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                    <Trophy className="h-10 w-10 text-purple-600" />
+                  </div>
+                  <p className="text-gray-600 text-lg mb-2">Подробная аналитика школы</p>
+                  <p className="text-gray-500">Функция в разработке</p>
                 </div>
               </CardContent>
             </Card>

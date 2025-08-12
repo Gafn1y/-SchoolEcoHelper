@@ -63,6 +63,7 @@ interface Class {
   teacher_email?: string
   students: Student[]
   created_at: string
+  total_points?: number
 }
 
 interface ClassInfo {
@@ -96,6 +97,14 @@ export default function StudentDashboard() {
       const response = await fetch(`/api/class-info?user_id=${userId}`)
       if (response.ok) {
         const data = await response.json()
+        // Calculate total class points
+        if (data.class && data.class.students) {
+          const totalPoints = data.class.students.reduce(
+            (sum: number, student: Student) => sum + (student.points || 0),
+            0,
+          )
+          data.class.total_points = totalPoints
+        }
         setClassInfo(data)
       } else {
         setError("Failed to load class information")
@@ -546,7 +555,7 @@ export default function StudentDashboard() {
                       <CardDescription>Информация о вашем классе</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center p-4 bg-blue-50 rounded-lg">
                           <div className="text-2xl font-bold text-blue-600">{classInfo.class.grade}</div>
                           <div className="text-sm text-gray-600">Класс</div>
@@ -558,6 +567,10 @@ export default function StudentDashboard() {
                         <div className="text-center p-4 bg-purple-50 rounded-lg">
                           <div className="text-2xl font-bold text-purple-600">{classInfo.class.capacity || 30}</div>
                           <div className="text-sm text-gray-600">Вместимость</div>
+                        </div>
+                        <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                          <div className="text-2xl font-bold text-yellow-600">{classInfo.class.total_points || 0}</div>
+                          <div className="text-sm text-gray-600">Очки класса</div>
                         </div>
                       </div>
 

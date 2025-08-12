@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,19 +25,22 @@ const wasteTypes = {
     items: ["🥤", "🍼", "🧴", "🛍️", "🥛"],
     label: "Пластик",
     color: "bg-green-500",
-    borderColor: "border-green-600",
+    lightColor: "bg-green-50",
+    textColor: "text-green-700",
   },
   organic: {
     items: ["🍎", "🍌", "🥕", "🍞", "🥔"],
     label: "Органика",
     color: "bg-yellow-500",
-    borderColor: "border-yellow-600",
+    lightColor: "bg-yellow-50",
+    textColor: "text-yellow-700",
   },
   paper: {
     items: ["📄", "📰", "📋", "📦", "📚"],
     label: "Бумага",
     color: "bg-red-500",
-    borderColor: "border-red-600",
+    lightColor: "bg-red-50",
+    textColor: "text-red-700",
   },
 }
 
@@ -50,7 +55,6 @@ export default function WasteSortingGame() {
   const [message, setMessage] = useState("")
   const [messageType, setMessageType] = useState<"success" | "error" | "">("")
   const [gameComplete, setGameComplete] = useState(false)
-  const [draggedItem, setDraggedItem] = useState<WasteItem | null>(null)
 
   useEffect(() => {
     initGame()
@@ -58,7 +62,7 @@ export default function WasteSortingGame() {
 
   const initGame = () => {
     const newWaste: WasteItem[] = []
-    const newGameState: GameState = {
+    const newGameState = {
       plastic: { collected: 0, total: 5 },
       organic: { collected: 0, total: 5 },
       paper: { collected: 0, total: 5 },
@@ -78,9 +82,7 @@ export default function WasteSortingGame() {
       }
     })
 
-    // Shuffle the waste items
     const shuffledWaste = newWaste.sort(() => Math.random() - 0.5)
-
     setCurrentWaste(shuffledWaste)
     setGameState(newGameState)
     setMessage("")
@@ -88,183 +90,162 @@ export default function WasteSortingGame() {
     setGameComplete(false)
   }
 
-  const handleDragStart = (item: WasteItem) => {
-    setDraggedItem(item)
+  const handleDragStart = (e: React.DragEvent, waste: WasteItem) => {
+    e.dataTransfer.setData("text/plain", JSON.stringify(waste))
   }
 
-  const handleDrop = (binType: "plastic" | "organic" | "paper") => {
-    if (!draggedItem) return
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
 
-    if (draggedItem.type === binType) {
-      // Correct drop
+  const handleDrop = (e: React.DragEvent, binType: string) => {
+    e.preventDefault()
+    const wasteData = JSON.parse(e.dataTransfer.getData("text/plain"))
+
+    if (wasteData.type === binType) {
+      // Correct sorting
       setGameState((prev) => ({
         ...prev,
-        [binType]: {
-          ...prev[binType],
-          collected: prev[binType].collected + 1,
-        },
+        [binType]: { ...prev[binType as keyof GameState], collected: prev[binType as keyof GameState].collected + 1 },
       }))
 
-      setCurrentWaste((prev) => prev.filter((item) => item.id !== draggedItem.id))
+      setCurrentWaste((prev) => prev.filter((item) => item.id !== wasteData.id))
       setMessage("Отлично! Правильная сортировка! 🎉")
       setMessageType("success")
 
       // Check if game is complete
-      const newGameState = {
-        ...gameState,
-        [binType]: {
-          ...gameState[binType],
-          collected: gameState[binType].collected + 1,
-        },
-      }
+      setTimeout(() => {
+        const updatedGameState = {
+          ...gameState,
+          [binType]: {
+            ...gameState[binType as keyof GameState],
+            collected: gameState[binType as keyof GameState].collected + 1,
+          },
+        }
 
-      const allComplete = Object.values(newGameState).every((state) => state.collected === state.total)
-
-      if (allComplete) {
-        setTimeout(() => {
-          setMessage("🎊 Поздравляем! Вы отсортировали весь мусор! 🎊")
-          setMessageType("success")
+        const isComplete = Object.values(updatedGameState).every((state) => state.collected === state.total)
+        if (isComplete) {
           setGameComplete(true)
-        }, 500)
-      }
+          setMessage("🎊 Поздравляем! Вы отсортировали весь мусор! 🎊")
+        }
+      }, 100)
     } else {
-      // Wrong drop
+      // Wrong sorting
       setMessage("Неправильно! Попробуй еще раз! 😅")
       setMessageType("error")
     }
 
-    setDraggedItem(null)
-
-    // Clear message after 3 seconds
+    // Clear message after 2 seconds
     setTimeout(() => {
       setMessage("")
       setMessageType("")
-    }, 3000)
-  }
-
-  const handleWasteClick = (item: WasteItem, binType: "plastic" | "organic" | "paper") => {
-    setDraggedItem(item)
-    handleDrop(binType)
+    }, 2000)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-4">
-            <Button variant="ghost" onClick={() => router.back()} className="mr-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Назад
-            </Button>
-            <div className="flex items-center gap-3">
-              <img src="/logo-new.png" alt="EcoSchool" className="h-10 w-10" />
-              <div>
-                <h1 className="text-2xl font-bold text-purple-900">🌍 Сортировка Мусора</h1>
-                <p className="text-sm text-gray-600">Игра на сортировку отходов</p>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-blue-100 to-green-100">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="outline"
+            onClick={() => router.push("/dashboard/student")}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Назад к панели
+          </Button>
+          <h1 className="text-3xl font-bold text-center text-purple-800">🌍 Сортировка Мусора</h1>
+          <Button variant="outline" onClick={initGame} className="flex items-center gap-2 bg-transparent">
+            <RotateCcw className="h-4 w-4" />
+            Новая игра
+          </Button>
         </div>
-      </div>
 
-      {/* Game Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Score Board */}
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-center text-3xl">🌍 Сортировка Мусора</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Score Board */}
-            <div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-              <div className="text-center">
-                <div className="font-bold">Пластик</div>
-                <div className="text-xl font-bold text-green-600">
-                  {gameState.plastic.collected}/{gameState.plastic.total}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold">Органика</div>
-                <div className="text-xl font-bold text-yellow-600">
-                  {gameState.organic.collected}/{gameState.organic.total}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold">Бумага</div>
-                <div className="text-xl font-bold text-red-600">
-                  {gameState.paper.collected}/{gameState.paper.total}
-                </div>
-              </div>
-            </div>
-
-            {/* Bins */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              {Object.entries(wasteTypes).map(([type, config]) => (
-                <div
-                  key={type}
-                  className={`relative w-full h-40 ${config.color} ${config.borderColor} border-4 rounded-2xl flex flex-col items-center justify-center text-white transition-all duration-300 hover:scale-105 cursor-pointer`}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => handleDrop(type as "plastic" | "organic" | "paper")}
-                >
-                  <div className="absolute -top-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center text-black font-bold border-2 border-white shadow-lg">
-                    {gameState[type as keyof GameState].collected}/{gameState[type as keyof GameState].total}
+          <CardContent className="p-4">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              {Object.entries(gameState).map(([type, state]) => (
+                <div key={type} className="space-y-2">
+                  <div className="font-medium">{wasteTypes[type as keyof typeof wasteTypes].label}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {state.collected}/{state.total}
                   </div>
-                  <div className="text-6xl mb-2">{type === "plastic" ? "🥤" : type === "organic" ? "🍌" : "🧻"}</div>
-                  <div className="text-xl font-bold">{config.label}</div>
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Waste Items */}
-            <div className="min-h-48 p-6 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300">
-              <div className="flex flex-wrap justify-center gap-4">
-                {currentWaste.map((item) => (
-                  <div
-                    key={item.id}
-                    className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center text-4xl cursor-grab hover:scale-110 transition-all duration-300 select-none"
-                    draggable
-                    onDragStart={() => handleDragStart(item)}
-                    title={`${item.emoji} (${wasteTypes[item.type].label})`}
-                  >
-                    {item.emoji}
-                  </div>
-                ))}
+        {/* Bins */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {Object.entries(wasteTypes).map(([type, config]) => (
+            <div
+              key={type}
+              className={`relative w-full h-40 ${config.color} rounded-xl flex flex-col items-center justify-center text-white transition-all duration-300 hover:scale-105 shadow-lg`}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, type)}
+            >
+              <div className="absolute -top-3 -right-3 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
+                <span className="font-bold text-gray-800">
+                  {gameState[type as keyof GameState].collected}/{gameState[type as keyof GameState].total}
+                </span>
               </div>
+              <div className="text-5xl mb-2">{config.items[0]}</div>
+              <div className="text-xl font-bold">{config.label}</div>
             </div>
+          ))}
+        </div>
 
-            {/* Message */}
-            {message && (
-              <div
-                className={`text-center mt-6 text-xl font-bold ${
-                  messageType === "success" ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {message}
-              </div>
-            )}
-
-            {/* Controls */}
-            <div className="text-center mt-6 space-x-4">
-              <Button onClick={initGame} className="bg-blue-600 hover:bg-blue-700">
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Новая игра
-              </Button>
-
-              {gameComplete && (
-                <Button
-                  onClick={() => {
-                    setMessage("🌟 Отличная работа! Планета благодарит вас! 🌟")
-                    setMessageType("success")
-                  }}
-                  className="bg-green-600 hover:bg-green-700"
+        {/* Waste Items */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center">Перетащите предметы в правильные контейнеры</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-5 md:grid-cols-8 gap-4 min-h-[200px] p-4 bg-gray-50 rounded-lg">
+              {currentWaste.map((waste) => (
+                <div
+                  key={waste.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, waste)}
+                  className="w-16 h-16 flex items-center justify-center text-3xl cursor-grab bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 active:cursor-grabbing"
                 >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Проверить
-                </Button>
-              )}
+                  {waste.emoji}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
+
+        {/* Message */}
+        {message && (
+          <div
+            className={`text-center mt-6 text-lg font-bold ${
+              messageType === "success" ? "text-green-600" : messageType === "error" ? "text-red-600" : "text-gray-600"
+            }`}
+          >
+            {message}
+          </div>
+        )}
+
+        {/* Complete Button */}
+        {gameComplete && (
+          <div className="text-center mt-6">
+            <Button
+              size="lg"
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => {
+                setMessage("🌟 Отличная работа! Планета благодарит вас! 🌟")
+                setMessageType("success")
+              }}
+            >
+              <CheckCircle className="mr-2 h-5 w-5" />
+              Завершить игру
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )

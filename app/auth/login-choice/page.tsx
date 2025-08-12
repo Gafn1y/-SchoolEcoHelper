@@ -15,7 +15,7 @@ export default function LoginChoicePage() {
             <img src="/logo-new.png" alt="EcoSchool" className="h-16 w-16" />
             <h1 className="text-3xl font-bold text-blue-900">EcoSchool</h1>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Добро пожаловать!</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{"Добро пожаловать!"}</h2>
           <p className="text-gray-600">Выберите вашу роль для входа в систему</p>
         </div>
 

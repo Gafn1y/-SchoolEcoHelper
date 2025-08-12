@@ -1,54 +1,27 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Play } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowRight, Gamepad2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function WasteSortingLearning() {
   const router = useRouter()
-  const [showVideo, setShowVideo] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-cyan-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-4">
-            <Button variant="ghost" onClick={() => router.back()} className="mr-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Назад
-            </Button>
-            <div className="flex items-center gap-3">
-              <img src="/logo-new.png" alt="EcoSchool" className="h-10 w-10" />
-              <div>
-                <h1 className="text-2xl font-bold text-green-900">Обучение сортировке мусора</h1>
-                <p className="text-sm text-gray-600">Изучите основы правильной сортировки отходов</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Header */}
         <div className="text-center mb-8">
-          <h2 className="text-4xl md:text-6xl font-bold text-green-700 mb-6 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-bold text-green-800 mb-4">
             Учитесь сортировать мусор правильно вместе с нами!
-          </h2>
+          </h1>
+          <p className="text-lg text-gray-600">Изучите основы экологически ответственного обращения с отходами</p>
         </div>
 
         {/* Video Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Play className="h-5 w-5 text-green-600" />
-              Обучающее видео
-            </CardTitle>
-            <CardDescription>Посмотрите видео о том, как правильно сортировать различные виды отходов</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <Card className="mb-8 shadow-lg">
+          <CardContent className="p-6">
             <div className="relative w-full max-w-4xl mx-auto">
               <div className="relative w-full h-0 pb-[56.25%] rounded-lg overflow-hidden shadow-2xl">
                 <iframe
@@ -64,93 +37,64 @@ export default function WasteSortingLearning() {
           </CardContent>
         </Card>
 
-        {/* Learning Materials */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
+        {/* Info Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-green-200 bg-green-50">
             <CardHeader>
-              <CardTitle className="text-green-600">🥤 Пластик</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-green-700">
+                <span className="text-2xl">🥤</span>
+                Пластик
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">Пластиковые бутылки, контейнеры, пакеты и упаковка</p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🥤</span>
-                  <span className="text-sm">Пластиковые бутылки</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🧴</span>
-                  <span className="text-sm">Контейнеры</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🛍️</span>
-                  <span className="text-sm">Пластиковые пакеты</span>
-                </div>
-              </div>
+              <p className="text-sm text-gray-700">Бутылки, пакеты, контейнеры. Перерабатывается в новые изделия.</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-yellow-200 bg-yellow-50">
             <CardHeader>
-              <CardTitle className="text-yellow-600">🍌 Органика</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-yellow-700">
+                <span className="text-2xl">🍌</span>
+                Органика
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">Пищевые отходы, остатки еды и органические материалы</p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🍎</span>
-                  <span className="text-sm">Фрукты</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🥕</span>
-                  <span className="text-sm">Овощи</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🍞</span>
-                  <span className="text-sm">Хлебобулочные изделия</span>
-                </div>
-              </div>
+              <p className="text-sm text-gray-700">Пищевые отходы, которые можно переработать в компост.</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-red-200 bg-red-50">
             <CardHeader>
-              <CardTitle className="text-red-600">📄 Бумага</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-red-700">
+                <span className="text-2xl">📄</span>
+                Бумага
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">Бумажные изделия, картон, газеты и документы</p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">📄</span>
-                  <span className="text-sm">Документы</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">📦</span>
-                  <span className="text-sm">Картонные коробки</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">📰</span>
-                  <span className="text-sm">Газеты и журналы</span>
-                </div>
-              </div>
+              <p className="text-sm text-gray-700">Газеты, картон, документы. Может быть переработана много раз.</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Action Buttons */}
-        <div className="text-center space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
             size="lg"
-            className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg"
             onClick={() => router.push("/learning/waste-sorting/game")}
           >
-            <Play className="h-5 w-5 mr-2" />
+            <Gamepad2 className="mr-2 h-5 w-5" />
             Начать игру
           </Button>
-          <div>
-            <Button variant="outline" onClick={() => router.push("/dashboard/student")} className="mx-2">
-              Вернуться в панель
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="lg"
+            className="px-8 py-4 text-lg bg-transparent"
+            onClick={() => router.push("/dashboard/student")}
+          >
+            <ArrowRight className="mr-2 h-5 w-5" />
+            Вернуться к панели
+          </Button>
         </div>
       </div>
     </div>
