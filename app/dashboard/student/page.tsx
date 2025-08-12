@@ -23,6 +23,8 @@ import {
   Target,
   MapPin,
   AlertCircle,
+  GamepadIcon,
+  Play,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -186,9 +188,10 @@ export default function StudentDashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Обзор</TabsTrigger>
             <TabsTrigger value="actions">Мои действия</TabsTrigger>
+            <TabsTrigger value="learning">Обучение</TabsTrigger>
             <TabsTrigger value="school">Информация о школе</TabsTrigger>
             <TabsTrigger value="class">Информация о классе</TabsTrigger>
           </TabsList>
@@ -302,6 +305,112 @@ export default function StudentDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Learning Tab */}
+          <TabsContent value="learning">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-blue-600" />
+                    Обучение и игры
+                  </CardTitle>
+                  <CardDescription>Изучайте экологию через интерактивные материалы и игры</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Waste Sorting Learning */}
+                    <Card className="border-2 border-green-200 hover:border-green-400 transition-colors">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-green-700">
+                          <div className="text-2xl">🗂️</div>
+                          Сортировка мусора
+                        </CardTitle>
+                        <CardDescription>
+                          Изучите основы правильной сортировки отходов и поиграйте в интерактивную игру
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <Play className="h-4 w-4" />
+                            <span>Видео урок</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <GamepadIcon className="h-4 w-4" />
+                            <span>Интерактивная игра</span>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Button
+                            className="w-full bg-green-600 hover:bg-green-700"
+                            onClick={() => router.push("/learning/waste-sorting")}
+                          >
+                            <BookOpen className="h-4 w-4 mr-2" />
+                            Начать обучение
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="w-full bg-transparent"
+                            onClick={() => router.push("/learning/waste-sorting/game")}
+                          >
+                            <GamepadIcon className="h-4 w-4 mr-2" />
+                            Играть сразу
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Coming Soon Cards */}
+                    <Card className="border-2 border-gray-200 opacity-75">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-gray-600">
+                          <div className="text-2xl">🌱</div>
+                          Экосистемы
+                        </CardTitle>
+                        <CardDescription>Изучение различных экосистем и их взаимосвязей (скоро)</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button disabled className="w-full">
+                          Скоро доступно
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-2 border-gray-200 opacity-75">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-gray-600">
+                          <div className="text-2xl">💧</div>
+                          Водные ресурсы
+                        </CardTitle>
+                        <CardDescription>Изучение важности воды и способов её сохранения (скоро)</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button disabled className="w-full">
+                          Скоро доступно
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-2 border-gray-200 opacity-75">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-gray-600">
+                          <div className="text-2xl">🌍</div>
+                          Изменение климата
+                        </CardTitle>
+                        <CardDescription>Понимание причин и последствий изменения климата (скоро)</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button disabled className="w-full">
+                          Скоро доступно
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* School Info Tab */}
