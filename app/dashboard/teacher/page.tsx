@@ -320,6 +320,16 @@ export default function TeacherDashboard() {
                   <span className="font-bold text-green-800">Классный руководитель</span>
                 </div>
               </div>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  localStorage.removeItem("user")
+                  window.location.href = "/"
+                }}
+                className="border-2 border-gray-200 hover:border-gray-300"
+              >
+                Выйти
+              </Button>
             </div>
           </div>
         </div>
