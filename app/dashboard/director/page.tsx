@@ -1,31 +1,47 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Building, Users, GraduationCap, Plus, Star, Trophy, ChevronDown } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Users,
+  GraduationCap,
+  TrendingUp,
+  Building,
+  LogOut,
+  Plus,
+  Eye,
+  Star,
+  CheckCircle,
+  Clock,
+  XCircle,
+} from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface User {
   id: number
   name: string
   email: string
   role: string
+  school_id: number
+  class_id?: number
+  grade?: string
+  points: number
+  level: number
   school_name?: string
+  class_name?: string
 }
 
 interface School {
   id: number
   name: string
-  address: string
-  director_id: number
+  address?: string
+  director_id?: number
+  created_at: string
 }
 
 interface Class {
@@ -33,99 +49,125 @@ interface Class {
   name: string
   grade: string
   school_id: number
+  teacher_id?: number
   student_count: number
+  created_at: string
   teacher_name?: string
   teacher_email?: string
 }
 
-interface Teacher {
-  id: number
-  name: string
-  email: string
-  points: number
-  level: number
-  created_at: string
-  is_homeroom_teacher: boolean
-  class_id?: number
-  class_name?: string
-  grade?: string
-  student_count: number
+interface ClassDetails {
+  class: Class & {
+    school_name?: string
+    school_address?: string
+  }
+  students: Array<{
+    id: number
+    name: string
+    email: string
+    points: number
+    level: number
+    grade?: string
+    created_at: string
+  }>
+  activity: Array<{
+    id: number
+    student_name: string
+    action_name: string
+    action_icon?: string
+    points_earned: number
+    status: string
+    created_at: string
+  }>
+  stats: {
+    total_students: number
+    total_points: number
+    average_points: number
+    pending_actions: number
+    approved_actions: number
+    rejected_actions: number
+  }
 }
 
 interface SchoolStats {
-  totalStudents: number
-  totalTeachers: number
-  totalClasses: number
-  totalPoints: number
+  total_students: number
+  total_teachers: number
+  total_classes: number
+  total_points: number
+  pending_actions: number
+  approved_actions: number
 }
 
 export default function DirectorDashboard() {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
-  const [schools, setSchools] = useState<School[]>([])
-  const [selectedSchool, setSelectedSchool] = useState<School | null>(null)
+  const [school, setSchool] = useState<School | null>(null)
   const [classes, setClasses] = useState<Class[]>([])
-  const [teachers, setTeachers] = useState<Teacher[]>([])
+  const [teachers, setTeachers] = useState<User[]>([])
+  const [students, setStudents] = useState<User[]>([])
   const [stats, setStats] = useState<SchoolStats>({
-    totalStudents: 0,
-    totalTeachers: 0,
-    totalClasses: 0,
-    totalPoints: 0,
+    total_students: 0,
+    total_teachers: 0,
+    total_classes: 0,
+    total_points: 0,
+    pending_actions: 0,
+    approved_actions: 0,
   })
-
-  // Form states
-  const [newClassName, setNewClassName] = useState("")
-  const [newClassGrade, setNewClassGrade] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [showSchoolSelector, setShowSchoolSelector] = useState(false)
-
-  // New school form
-  const [showCreateSchool, setShowCreateSchool] = useState(false)
-  const [newSchoolData, setNewSchoolData] = useState({
-    name: "",
-    address: "",
-    total_classes: "",
-  })
+  const [selectedClass, setSelectedClass] = useState<ClassDetails | null>(null)
+  const [showClassDialog, setShowClassDialog] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const userData = localStorage.getItem("user")
-    if (userData) {
-      const parsedUser = JSON.parse(userData)
-      setUser(parsedUser)
-      fetchDirectorSchools(parsedUser.id)
+    if (!userData) {
+      router.push("/auth/login-choice")
+      return
     }
-  }, [])
 
-  const fetchDirectorSchools = async (directorId: number) => {
     try {
-      const response = await fetch(`/api/schools?director_id=${directorId}`)
-      if (response.ok) {
-        const schoolsData = await response.json()
-        setSchools(schoolsData)
-
-        if (schoolsData.length === 1) {
-          // If only one school, select it automatically
-          setSelectedSchool(schoolsData[0])
-          await fetchSchoolData(schoolsData[0].id)
-        } else if (schoolsData.length > 1) {
-          // If multiple schools, show selector
-          setShowSchoolSelector(true)
-        }
+      const parsedUser = JSON.parse(userData)
+      if (parsedUser.role !== "director") {
+        router.push("/auth/login-choice")
+        return
       }
+      setUser(parsedUser)
+      fetchAllData(parsedUser.school_id)
     } catch (error) {
-      console.error("Error fetching schools:", error)
-      setError("Ошибка при загрузке школ")
+      console.error("Error parsing user data:", error)
+      setError("Ошибка загрузки данных пользователя")
+      setLoading(false)
+    }
+  }, [router])
+
+  const fetchAllData = async (schoolId: number) => {
+    try {
+      await Promise.all([
+        fetchSchool(schoolId),
+        fetchClasses(schoolId),
+        fetchTeachers(schoolId),
+        fetchStudents(schoolId),
+        fetchStats(schoolId),
+      ])
+    } catch (error) {
+      console.error("Error fetching data:", error)
+      setError("Ошибка загрузки данных")
+    } finally {
+      setLoading(false)
     }
   }
 
-  const fetchSchoolData = async (schoolId: number) => {
+  const fetchSchool = async (schoolId: number) => {
     try {
-      await fetchClasses(schoolId)
-      await fetchTeachers(schoolId)
-      await fetchSchoolStats(schoolId)
+      const response = await fetch(`/api/schools?id=${schoolId}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.length > 0) {
+          setSchool(data[0])
+        }
+      }
     } catch (error) {
-      console.error("Error fetching school data:", error)
-      setError("Ошибка при загрузке данных школы")
+      console.error("Error fetching school:", error)
     }
   }
 
@@ -133,114 +175,69 @@ export default function DirectorDashboard() {
     try {
       const response = await fetch(`/api/classes?school_id=${schoolId}`)
       if (response.ok) {
-        const classesData = await response.json()
-        setClasses(classesData)
+        const data = await response.json()
+        setClasses(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error("Error fetching classes:", error)
+      setClasses([])
     }
   }
 
   const fetchTeachers = async (schoolId: number) => {
     try {
-      const response = await fetch(`/api/teachers?school_id=${schoolId}`)
+      const response = await fetch(`/api/users?role=teacher&school_id=${schoolId}`)
       if (response.ok) {
-        const teachersData = await response.json()
-        setTeachers(teachersData)
+        const data = await response.json()
+        setTeachers(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error("Error fetching teachers:", error)
+      setTeachers([])
     }
   }
 
-  const fetchSchoolStats = async (schoolId: number) => {
+  const fetchStudents = async (schoolId: number) => {
+    try {
+      const response = await fetch(`/api/users?role=student&school_id=${schoolId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setStudents(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error("Error fetching students:", error)
+      setStudents([])
+    }
+  }
+
+  const fetchStats = async (schoolId: number) => {
     try {
       const response = await fetch(`/api/schools/${schoolId}/stats`)
       if (response.ok) {
-        const statsData = await response.json()
-        setStats(statsData)
+        const data = await response.json()
+        setStats(data)
       }
     } catch (error) {
-      console.error("Error fetching school stats:", error)
+      console.error("Error fetching stats:", error)
     }
   }
 
-  const handleSchoolSelect = async (school: School) => {
-    setSelectedSchool(school)
-    setShowSchoolSelector(false)
-    await fetchSchoolData(school.id)
-  }
-
-  const handleCreateSchool = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user || !newSchoolData.name || !newSchoolData.total_classes) return
-
-    setLoading(true)
+  const fetchClassDetails = async (classId: number) => {
     try {
-      const response = await fetch("/api/schools", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newSchoolData.name,
-          address: newSchoolData.address,
-          total_classes: Number.parseInt(newSchoolData.total_classes),
-          director_id: user.id,
-        }),
-      })
-
+      const response = await fetch(`/api/classes/${classId}`)
       if (response.ok) {
-        const newSchool = await response.json()
-        setNewSchoolData({ name: "", address: "", total_classes: "" })
-        setShowCreateSchool(false)
-
-        // Refresh schools list and select the new school
-        await fetchDirectorSchools(user.id)
-        setSelectedSchool(newSchool)
-        await fetchSchoolData(newSchool.id)
-
-        alert("Школа успешно создана!")
-      } else {
-        throw new Error("Failed to create school")
+        const data = await response.json()
+        setSelectedClass(data)
+        setShowClassDialog(true)
       }
     } catch (error) {
-      console.error("Error creating school:", error)
-      setError("Ошибка при создании школы")
-    } finally {
-      setLoading(false)
+      console.error("Error fetching class details:", error)
     }
   }
 
-  const handleCreateClass = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedSchool || !newClassName || !newClassGrade) return
-
-    setLoading(true)
-    try {
-      const response = await fetch("/api/classes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newClassName,
-          grade: newClassGrade,
-          school_id: selectedSchool.id,
-        }),
-      })
-
-      if (response.ok) {
-        setNewClassName("")
-        setNewClassGrade("")
-        await fetchClasses(selectedSchool.id)
-        await fetchSchoolStats(selectedSchool.id)
-        alert("Класс успешно создан!")
-      } else {
-        throw new Error("Failed to create class")
-      }
-    } catch (error) {
-      console.error("Error creating class:", error)
-      setError("Ошибка при создании класса")
-    } finally {
-      setLoading(false)
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("user")
+    router.push("/")
   }
 
   const getInitials = (name: string) => {
@@ -251,209 +248,24 @@ export default function DirectorDashboard() {
       .toUpperCase()
   }
 
-  if (!user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Загрузка...</p>
+        </div>
       </div>
     )
   }
 
-  // Show school selector if multiple schools or no school selected
-  if (showSchoolSelector || (!selectedSchool && schools.length > 0)) {
+  if (error || !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-3xl border-0 shadow-2xl">
-          <CardHeader className="text-center bg-gradient-to-r from-purple-100 to-blue-100 rounded-t-lg">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="p-3 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl">
-                <img src="/logo-new.png" alt="EcoSchool" className="h-12 w-12" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                  EcoSchool
-                </h1>
-                <p className="text-gray-600 font-medium">Панель директора</p>
-              </div>
-            </div>
-            <CardTitle className="text-2xl text-gray-800">Выберите школу для управления</CardTitle>
-            <CardDescription className="text-gray-600">
-              У вас есть доступ к управлению несколькими школами
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6 p-6">
-            {schools.map((school) => (
-              <Card
-                key={school.id}
-                className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-purple-300 bg-gradient-to-r from-white to-gray-50"
-                onClick={() => handleSchoolSelect(school)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold text-xl text-gray-800">{school.name}</h3>
-                      {school.address && <p className="text-gray-600 mt-1">{school.address}</p>}
-                    </div>
-                    <div className="p-3 bg-purple-100 rounded-full">
-                      <Building className="h-8 w-8 text-purple-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            <div className="pt-6 border-t">
-              <Button
-                onClick={() => setShowCreateSchool(true)}
-                className="w-full h-12 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white border-0"
-                size="lg"
-              >
-                <Plus className="h-5 w-5 mr-3" />
-                Создать новую школу
-              </Button>
-            </div>
-
-            {showCreateSchool && (
-              <Card className="border-2 border-green-200 bg-gradient-to-r from-green-50 to-teal-50">
-                <CardHeader>
-                  <CardTitle className="text-green-800">Создать новую школу</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleCreateSchool} className="space-y-4">
-                    <div>
-                      <Label htmlFor="schoolName" className="font-medium">
-                        Название школы
-                      </Label>
-                      <Input
-                        id="schoolName"
-                        value={newSchoolData.name}
-                        onChange={(e) => setNewSchoolData({ ...newSchoolData, name: e.target.value })}
-                        placeholder="Введите название школы"
-                        className="mt-1"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="schoolAddress" className="font-medium">
-                        Адрес школы
-                      </Label>
-                      <Input
-                        id="schoolAddress"
-                        value={newSchoolData.address}
-                        onChange={(e) => setNewSchoolData({ ...newSchoolData, address: e.target.value })}
-                        placeholder="Введите адрес школы"
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="totalClasses" className="font-medium">
-                        Количество классов
-                      </Label>
-                      <Input
-                        id="totalClasses"
-                        type="number"
-                        value={newSchoolData.total_classes}
-                        onChange={(e) => setNewSchoolData({ ...newSchoolData, total_classes: e.target.value })}
-                        placeholder="Введите количество классов"
-                        className="mt-1"
-                        min="1"
-                        required
-                      />
-                    </div>
-                    <div className="flex space-x-3 pt-4">
-                      <Button
-                        type="submit"
-                        disabled={loading}
-                        className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white border-0"
-                      >
-                        {loading ? "Создание..." : "Создать школу"}
-                      </Button>
-                      <Button type="button" variant="outline" onClick={() => setShowCreateSchool(false)}>
-                        Отмена
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  // Show message if no schools exist
-  if (schools.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg border-0 shadow-2xl">
-          <CardHeader className="text-center bg-gradient-to-r from-purple-100 to-blue-100 rounded-t-lg">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="p-3 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl">
-                <img src="/logo-new.png" alt="EcoSchool" className="h-12 w-12" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                  EcoSchool
-                </h1>
-                <p className="text-gray-600 font-medium">Панель директора</p>
-              </div>
-            </div>
-            <CardTitle className="text-2xl text-gray-800">Создайте свою первую школу</CardTitle>
-            <CardDescription className="text-gray-600">Для начала работы необходимо создать школу</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <form onSubmit={handleCreateSchool} className="space-y-4">
-              <div>
-                <Label htmlFor="schoolName" className="font-medium">
-                  Название школы
-                </Label>
-                <Input
-                  id="schoolName"
-                  value={newSchoolData.name}
-                  onChange={(e) => setNewSchoolData({ ...newSchoolData, name: e.target.value })}
-                  placeholder="Введите название школы"
-                  className="mt-1"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="schoolAddress" className="font-medium">
-                  Адрес школы
-                </Label>
-                <Input
-                  id="schoolAddress"
-                  value={newSchoolData.address}
-                  onChange={(e) => setNewSchoolData({ ...newSchoolData, address: e.target.value })}
-                  placeholder="Введите адрес школы"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="totalClasses" className="font-medium">
-                  Количество классов
-                </Label>
-                <Input
-                  id="totalClasses"
-                  type="number"
-                  value={newSchoolData.total_classes}
-                  onChange={(e) => setNewSchoolData({ ...newSchoolData, total_classes: e.target.value })}
-                  placeholder="Введите количество классов"
-                  className="mt-1"
-                  min="1"
-                  required
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0 mt-6"
-              >
-                {loading ? "Создание..." : "Создать школу"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error || "Ошибка загрузки данных"}</p>
+          <Button onClick={() => router.push("/auth/login-choice")}>Вернуться к входу</Button>
+        </div>
       </div>
     )
   }
@@ -461,350 +273,568 @@ export default function DirectorDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
       {/* Header */}
-      <div className="bg-white shadow-lg border-b border-gray-100">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl">
-                <img src="/logo-new.png" alt="EcoSchool" className="h-10 w-10" />
-              </div>
+      <div className="bg-white/80 backdrop-blur-sm border-b border-purple-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center gap-3">
+              <img src="/logo-new.png" alt="EcoSchool" className="h-10 w-10" />
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                   EcoSchool
                 </h1>
-                <p className="text-gray-600 font-medium">Панель директора</p>
+                <p className="text-sm text-gray-600">Панель директора</p>
               </div>
             </div>
-            <div className="flex items-center gap-6">
-              {schools.length > 1 && (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowSchoolSelector(true)}
-                  className="flex items-center gap-2 border-2 border-purple-200 hover:border-purple-300"
-                >
-                  <Building className="h-4 w-4" />
-                  {selectedSchool?.name}
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              )}
+            <div className="flex items-center gap-4">
               <div className="text-right">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-                  <p className="text-sm text-gray-500">Добро пожаловать,</p>
-                </div>
-                <p className="font-bold text-gray-800 text-lg">{user.name}</p>
-                {selectedSchool && <p className="text-sm text-gray-500">{selectedSchool.name}</p>}
+                <p className="font-semibold text-gray-900">{user.name}</p>
+                <p className="text-sm text-gray-600">{school?.name}</p>
+                <p className="text-xs text-gray-500">Директор</p>
               </div>
-              <div className="bg-gradient-to-r from-purple-100 to-blue-100 px-4 py-2 rounded-full border-2 border-purple-200">
-                <div className="flex items-center gap-2">
-                  <Building className="h-5 w-5 text-purple-600" />
-                  <span className="font-bold text-purple-800">Директор</span>
-                </div>
-              </div>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-gray-600 hover:text-gray-900">
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
-        {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50">
-            <AlertDescription className="text-red-800">{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Stats Overview */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 font-medium text-sm">Всего учеников</p>
-                  <p className="text-3xl font-bold text-blue-700">{stats.totalStudents}</p>
-                  <p className="text-blue-500 text-xs">Активных учеников</p>
+                  <p className="text-purple-100 text-sm font-medium">Классы</p>
+                  <p className="text-3xl font-bold">{stats.total_classes}</p>
                 </div>
-                <div className="p-3 bg-blue-200 rounded-full">
-                  <Users className="h-8 w-8 text-blue-600" />
+                <div className="bg-white/20 p-3 rounded-full">
+                  <GraduationCap className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 font-medium text-sm">Учителей</p>
-                  <p className="text-3xl font-bold text-green-700">{stats.totalTeachers}</p>
-                  <p className="text-green-500 text-xs">Классных руководителей</p>
+                  <p className="text-blue-100 text-sm font-medium">Учителя</p>
+                  <p className="text-3xl font-bold">{stats.total_teachers}</p>
                 </div>
-                <div className="p-3 bg-green-200 rounded-full">
-                  <GraduationCap className="h-8 w-8 text-green-600" />
+                <div className="bg-white/20 p-3 rounded-full">
+                  <Users className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-600 font-medium text-sm">Классов</p>
-                  <p className="text-3xl font-bold text-purple-700">{stats.totalClasses}</p>
-                  <p className="text-purple-500 text-xs">Активных классов</p>
+                  <p className="text-green-100 text-sm font-medium">Ученики</p>
+                  <p className="text-3xl font-bold">{stats.total_students}</p>
                 </div>
-                <div className="p-3 bg-purple-200 rounded-full">
-                  <Building className="h-8 w-8 text-purple-600" />
+                <div className="bg-white/20 p-3 rounded-full">
+                  <Users className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-yellow-100">
+          <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white border-0 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-600 font-medium text-sm">Очки школы</p>
-                  <p className="text-3xl font-bold text-yellow-700">{stats.totalPoints}</p>
-                  <p className="text-yellow-500 text-xs">Общие очки школы</p>
+                  <p className="text-yellow-100 text-sm font-medium">Очки</p>
+                  <p className="text-3xl font-bold">{stats.total_points}</p>
                 </div>
-                <div className="p-3 bg-yellow-200 rounded-full">
-                  <Star className="h-8 w-8 text-yellow-600" />
+                <div className="bg-white/20 p-3 rounded-full">
+                  <Star className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">На проверке</p>
+                  <p className="text-3xl font-bold">{stats.pending_actions}</p>
+                </div>
+                <div className="bg-white/20 p-3 rounded-full">
+                  <Clock className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-indigo-100 text-sm font-medium">Одобрено</p>
+                  <p className="text-3xl font-bold">{stats.approved_actions}</p>
+                </div>
+                <div className="bg-white/20 p-3 rounded-full">
+                  <CheckCircle className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Main Content Tabs */}
         <Tabs defaultValue="classes" className="space-y-6">
-          <TabsList className="bg-white shadow-lg border-0 p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border border-purple-200">
             <TabsTrigger
               value="classes"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-400 data-[state=active]:to-blue-500 data-[state=active]:text-white rounded-lg px-6 py-2 font-medium"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white"
             >
-              Классы ({stats.totalClasses})
+              Классы
             </TabsTrigger>
             <TabsTrigger
               value="teachers"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-400 data-[state=active]:to-green-500 data-[state=active]:text-white rounded-lg px-6 py-2 font-medium"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
             >
-              Учителя ({stats.totalTeachers})
+              Учителя
             </TabsTrigger>
             <TabsTrigger
-              value="overview"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-400 data-[state=active]:to-purple-500 data-[state=active]:text-white rounded-lg px-6 py-2 font-medium"
+              value="students"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-teal-500 data-[state=active]:text-white"
             >
-              Обзор школы
+              Ученики
+            </TabsTrigger>
+            <TabsTrigger
+              value="school"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+            >
+              Школа
             </TabsTrigger>
           </TabsList>
 
+          {/* Classes Tab */}
           <TabsContent value="classes" className="space-y-6">
-            {/* Create Class Form */}
-            <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-blue-700">
-                  <div className="p-2 bg-blue-200 rounded-lg">
-                    <Plus className="h-5 w-5 text-blue-600" />
-                  </div>
-                  Создать новый класс
-                </CardTitle>
-                <CardDescription className="text-blue-600">Добавьте новый класс в вашу школу</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <form onSubmit={handleCreateClass} className="space-y-4">
-                  <div>
-                    <Label htmlFor="className" className="font-medium">
-                      Название класса
-                    </Label>
-                    <Input
-                      id="className"
-                      value={newClassName}
-                      onChange={(e) => setNewClassName(e.target.value)}
-                      placeholder="например: 5А"
-                      className="mt-1"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="classGrade" className="font-medium">
-                      Параллель
-                    </Label>
-                    <Input
-                      id="classGrade"
-                      value={newClassGrade}
-                      onChange={(e) => setNewClassGrade(e.target.value)}
-                      placeholder="например: 5"
-                      className="mt-1"
-                      required
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0"
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Классы школы</h2>
+              <Button className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+                <Plus className="h-4 w-4 mr-2" />
+                Создать класс
+              </Button>
+            </div>
+
+            {classes.length === 0 ? (
+              <Card className="bg-white/80 backdrop-blur-sm">
+                <CardContent className="text-center py-12">
+                  <GraduationCap className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Нет классов</h3>
+                  <p className="text-gray-500">Создайте первый класс для начала работы</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {classes.map((classItem) => (
+                  <Card
+                    key={classItem.id}
+                    className="bg-white/80 backdrop-blur-sm border-purple-200 hover:border-purple-300 transition-all cursor-pointer hover:shadow-lg"
+                    onClick={() => fetchClassDetails(classItem.id)}
                   >
-                    {loading ? "Создание..." : "Создать класс"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Classes List */}
-            <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-lg">
-                <CardTitle className="text-indigo-700">Классы школы</CardTitle>
-                <CardDescription className="text-indigo-600">
-                  Список всех классов и их классных руководителей
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                {classes.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                      <Building className="h-10 w-10 text-gray-400" />
-                    </div>
-                    <p className="text-gray-600 text-lg mb-2">Нет созданных классов</p>
-                    <p className="text-gray-500">Создайте первый класс для начала работы</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {classes.map((cls) => (
-                      <div
-                        key={cls.id}
-                        className="flex items-center gap-6 p-6 border border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 hover:shadow-lg"
-                      >
-                        <div className="p-3 bg-blue-100 rounded-full">
-                          <Building className="h-6 w-6 text-blue-600" />
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg text-purple-800">{classItem.name}</CardTitle>
+                          <CardDescription>{classItem.grade} класс</CardDescription>
                         </div>
-
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg text-gray-800">{cls.name}</h3>
-                          <p className="text-gray-600">{cls.grade} класс</p>
-                          {cls.teacher_name ? (
-                            <p className="text-green-600 font-medium">Классный руководитель: {cls.teacher_name}</p>
-                          ) : (
-                            <p className="text-orange-600 font-medium">Нет классного руководителя</p>
-                          )}
-                        </div>
-
-                        <div className="text-right space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Users className="h-5 w-5 text-gray-500" />
-                            <span className="font-bold text-lg text-gray-800">{cls.student_count} учеников</span>
-                          </div>
-                          <Badge className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 border-0">
-                            {cls.grade} класс
-                          </Badge>
-                        </div>
+                        <div className="text-2xl">🎓</div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Учеников:</span>
+                          <Badge className="bg-blue-100 text-blue-800">{classItem.student_count}</Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Учитель:</span>
+                          <span className="text-sm text-gray-900">{classItem.teacher_name || "Не назначен"}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Создан:</span>
+                          <span className="text-sm text-gray-500">
+                            {new Date(classItem.created_at).toLocaleDateString("ru-RU")}
+                          </span>
+                        </div>
+                        <Button size="sm" variant="outline" className="w-full bg-transparent">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Подробнее
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
+          {/* Teachers Tab */}
           <TabsContent value="teachers" className="space-y-6">
-            {/* Active Teachers */}
-            <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-green-50 to-teal-50 rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-green-700">
-                  <div className="p-2 bg-green-200 rounded-lg">
-                    <GraduationCap className="h-6 w-6 text-green-600" />
-                  </div>
-                  Активные учителя
-                </CardTitle>
-                <CardDescription className="text-green-600">
-                  Учителя, которые уже присоединились к школе
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                {teachers.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                      <GraduationCap className="h-10 w-10 text-gray-400" />
-                    </div>
-                    <p className="text-gray-600 text-lg mb-2">Нет активных учителей</p>
-                    <p className="text-gray-500">Учителя появятся здесь после регистрации</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {teachers.map((teacher) => (
-                      <div
-                        key={teacher.id}
-                        className="flex items-center gap-6 p-6 border border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 transition-all duration-200 hover:shadow-lg"
-                      >
-                        <Avatar className="h-14 w-14 border-3 border-green-200">
-                          <AvatarFallback className="bg-gradient-to-br from-green-100 to-teal-100 text-green-700 font-bold text-lg">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Учителя школы</h2>
+              <Button className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600">
+                <Plus className="h-4 w-4 mr-2" />
+                Пригласить учителя
+              </Button>
+            </div>
+
+            {teachers.length === 0 ? (
+              <Card className="bg-white/80 backdrop-blur-sm">
+                <CardContent className="text-center py-12">
+                  <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Нет учителей</h3>
+                  <p className="text-gray-500">Пригласите учителей для работы в школе</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {teachers.map((teacher) => (
+                  <Card key={teacher.id} className="bg-white/80 backdrop-blur-sm border-blue-200">
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700">
                             {getInitials(teacher.name)}
                           </AvatarFallback>
                         </Avatar>
-
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-bold text-lg text-gray-800">{teacher.name}</h3>
-                            {teacher.is_homeroom_teacher && (
-                              <Badge className="bg-gradient-to-r from-green-100 to-teal-100 text-green-800 border-0">
-                                Классный руководитель
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-gray-600 mb-1">{teacher.email}</p>
-                          {teacher.class_name && (
-                            <p className="text-blue-600 font-medium">
-                              Класс: {teacher.class_name} ({teacher.grade} класс)
-                            </p>
-                          )}
-                          <p className="text-sm text-gray-500">
-                            Присоединился: {new Date(teacher.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-
-                        <div className="text-right space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Users className="h-5 w-5 text-gray-500" />
-                            <span className="text-gray-700">{teacher.student_count} учеников</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Star className="h-5 w-5 text-yellow-500" />
-                            <span className="text-gray-700">{teacher.points} очков</span>
-                          </div>
-                          <Badge className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border-0">
-                            Уровень {teacher.level}
-                          </Badge>
+                          <CardTitle className="text-lg text-blue-800">{teacher.name}</CardTitle>
+                          <CardDescription>{teacher.email}</CardDescription>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Класс:</span>
+                          <span className="text-sm text-gray-900">{teacher.class_name || "Не назначен"}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Очки:</span>
+                          <Badge className="bg-green-100 text-green-800">{teacher.points}</Badge>
+                        </div>
+                        <Button size="sm" variant="outline" className="w-full bg-transparent">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Подробнее
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
-          <TabsContent value="overview">
-            <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-purple-700">
-                  <div className="p-2 bg-purple-200 rounded-lg">
-                    <Trophy className="h-6 w-6 text-purple-600" />
-                  </div>
-                  Обзор школы
-                </CardTitle>
-                <CardDescription className="text-purple-600">Общая статистика и аналитика школы</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="text-center py-12">
-                  <div className="p-4 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                    <Trophy className="h-10 w-10 text-purple-600" />
-                  </div>
-                  <p className="text-gray-600 text-lg mb-2">Подробная аналитика школы</p>
-                  <p className="text-gray-500">Функция в разработке</p>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Students Tab */}
+          <TabsContent value="students" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Ученики школы</h2>
+              <Badge className="bg-green-100 text-green-800 border border-green-300">Топ по очкам</Badge>
+            </div>
+
+            {students.length === 0 ? (
+              <Card className="bg-white/80 backdrop-blur-sm">
+                <CardContent className="text-center py-12">
+                  <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Нет учеников</h3>
+                  <p className="text-gray-500">Ученики появятся после регистрации</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {students.slice(0, 12).map((student, index) => (
+                  <Card key={student.id} className="bg-white/80 backdrop-blur-sm border-green-200">
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback className="bg-gradient-to-br from-green-100 to-teal-100 text-green-700">
+                            {getInitials(student.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <CardTitle className="text-lg text-green-800">{student.name}</CardTitle>
+                          <CardDescription>
+                            {student.class_name} • Уровень {student.level}
+                          </CardDescription>
+                        </div>
+                        {index < 3 && <div className="text-2xl">{index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}</div>}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Очки:</span>
+                          <Badge className="bg-green-100 text-green-800">{student.points}</Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Email:</span>
+                          <span className="text-sm text-gray-500">{student.email}</span>
+                        </div>
+                        <Button size="sm" variant="outline" className="w-full bg-transparent">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Подробнее
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* School Tab */}
+          <TabsContent value="school" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Информация о школе</h2>
+              <Badge className="bg-pink-100 text-pink-800 border border-pink-300">
+                <Building className="h-4 w-4 mr-1" />
+                Моя школа
+              </Badge>
+            </div>
+
+            {!school ? (
+              <Card className="bg-white/80 backdrop-blur-sm">
+                <CardContent className="text-center py-12">
+                  <Building className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Информация недоступна</h3>
+                  <p className="text-gray-500">Данные о школе загружаются...</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="bg-white/80 backdrop-blur-sm border-pink-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-pink-800">
+                      <Building className="h-6 w-6" />
+                      Основная информация
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Название:</span>
+                      <span className="font-semibold text-gray-900">{school.name}</span>
+                    </div>
+                    {school.address && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Адрес:</span>
+                        <span className="font-semibold text-gray-900">{school.address}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Директор:</span>
+                      <span className="font-semibold text-gray-900">{user.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Дата создания:</span>
+                      <span className="text-sm text-gray-500">
+                        {new Date(school.created_at).toLocaleDateString("ru-RU")}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/80 backdrop-blur-sm border-pink-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-pink-800">
+                      <TrendingUp className="h-6 w-6" />
+                      Статистика
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Всего классов:</span>
+                      <Badge className="bg-purple-100 text-purple-800">{stats.total_classes}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Всего учителей:</span>
+                      <Badge className="bg-blue-100 text-blue-800">{stats.total_teachers}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Всего учеников:</span>
+                      <Badge className="bg-green-100 text-green-800">{stats.total_students}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Общие очки:</span>
+                      <Badge className="bg-yellow-100 text-yellow-800">{stats.total_points}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Class Details Dialog */}
+      <Dialog open={showClassDialog} onOpenChange={setShowClassDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <GraduationCap className="h-6 w-6" />
+              {selectedClass?.class.name} - Подробная информация
+            </DialogTitle>
+            <DialogDescription>Полная информация о классе, учениках и активности</DialogDescription>
+          </DialogHeader>
+
+          {selectedClass && (
+            <div className="space-y-6">
+              {/* Class Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-600">{selectedClass.stats.total_students}</div>
+                    <div className="text-sm text-gray-600">Учеников</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-green-600">{selectedClass.stats.total_points}</div>
+                    <div className="text-sm text-gray-600">Очков</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-orange-600">{selectedClass.stats.pending_actions}</div>
+                    <div className="text-sm text-gray-600">На проверке</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-purple-600">{selectedClass.stats.average_points}</div>
+                    <div className="text-sm text-gray-600">Средний балл</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Class Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Информация о классе</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-gray-600">Учитель:</span>
+                      <span className="ml-2 font-semibold">{selectedClass.class.teacher_name || "Не назначен"}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Параллель:</span>
+                      <span className="ml-2 font-semibold">{selectedClass.class.grade}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Email учителя:</span>
+                      <span className="ml-2 text-sm text-gray-500">{selectedClass.class.teacher_email || "—"}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Дата создания:</span>
+                      <span className="ml-2 text-sm text-gray-500">
+                        {new Date(selectedClass.class.created_at).toLocaleDateString("ru-RU")}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Students List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Ученики класса</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {selectedClass.students.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">В классе пока нет учеников</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedClass.students.map((student, index) => (
+                        <div key={student.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700">
+                              {getInitials(student.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{student.name}</span>
+                              {index < 3 && (
+                                <span className="text-lg">{index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}</span>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {student.points} очков • Уровень {student.level}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Recent Activity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Последняя активность</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {selectedClass.activity.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">Пока нет активности</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {selectedClass.activity.map((activity) => (
+                        <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <span className="text-xl">{activity.action_icon || "🌱"}</span>
+                            <div>
+                              <div className="font-semibold">{activity.student_name}</div>
+                              <div className="text-sm text-gray-600">{activity.action_name}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              className={
+                                activity.status === "approved"
+                                  ? "bg-green-100 text-green-800"
+                                  : activity.status === "pending"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-red-100 text-red-800"
+                              }
+                            >
+                              {activity.status === "approved" ? (
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                              ) : activity.status === "pending" ? (
+                                <Clock className="h-3 w-3 mr-1" />
+                              ) : (
+                                <XCircle className="h-3 w-3 mr-1" />
+                              )}
+                              {activity.status === "approved"
+                                ? "Одобрено"
+                                : activity.status === "pending"
+                                  ? "На проверке"
+                                  : "Отклонено"}
+                            </Badge>
+                            <span className="font-bold text-green-600">+{activity.points_earned}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

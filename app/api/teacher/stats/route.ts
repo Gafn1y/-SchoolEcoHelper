@@ -1,67 +1,81 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 
-export const dynamic = "force-dynamic"
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const teacher_id = searchParams.get("teacher_id")
 
     if (!teacher_id) {
-      return NextResponse.json({ error: "Teacher ID required" }, { status: 400 })
+      return NextResponse.json({ error: "Teacher ID is required" }, { status: 400 })
     }
 
     // Get teacher's class
-    const teacher = await sql`
-      SELECT class_id FROM users WHERE id = ${teacher_id} AND role = 'teacher'
+    const teacherResult = await sql`
+      SELECT class_id, school_id FROM users WHERE id = ${teacher_id} AND role = 'teacher'
     `
 
-    if (teacher.length === 0 || !teacher[0].class_id) {
+    if (teacherResult.length === 0) {
       return NextResponse.json({
-        totalStudents: 0,
-        pendingActions: 0,
-        approvedActions: 0,
-        totalPoints: 0,
+        total_students: 0,
+        total_class_points: 0,
+        pending_actions: 0,
+        approved_actions: 0,
+        average_student_points: 0,
       })
     }
 
-    const class_id = teacher[0].class_id
+    const { class_id, school_id } = teacherResult[0]
 
-    // Get students count
-    const studentsCount = await sql`
-      SELECT COUNT(*) as count FROM users 
+    if (!class_id) {
+      return NextResponse.json({
+        total_students: 0,
+        total_class_points: 0,
+        pending_actions: 0,
+        approved_actions: 0,
+        average_student_points: 0,
+      })
+    }
+
+    // Get class statistics
+    const studentsResult = await sql`
+      SELECT 
+        COUNT(*) as total_students,
+        COALESCE(SUM(points), 0) as total_class_points,
+        COALESCE(AVG(points), 0) as average_student_points
+      FROM users 
       WHERE class_id = ${class_id} AND role = 'student'
     `
 
-    // Get pending actions count
-    const pendingCount = await sql`
-      SELECT COUNT(*) as count FROM user_actions ua
+    const actionsResult = await sql`
+      SELECT 
+        COUNT(CASE WHEN ua.status = 'pending' THEN 1 END) as pending_actions,
+        COUNT(CASE WHEN ua.status = 'approved' THEN 1 END) as approved_actions
+      FROM user_actions ua
       JOIN users u ON ua.user_id = u.id
-      WHERE u.class_id = ${class_id} AND ua.status = 'pending'
+      WHERE u.class_id = ${class_id}
     `
 
-    // Get approved actions count
-    const approvedCount = await sql`
-      SELECT COUNT(*) as count FROM user_actions ua
-      JOIN users u ON ua.user_id = u.id
-      WHERE u.class_id = ${class_id} AND ua.status = 'approved'
-    `
+    const studentStats = studentsResult[0] || { total_students: 0, total_class_points: 0, average_student_points: 0 }
+    const actionStats = actionsResult[0] || { pending_actions: 0, approved_actions: 0 }
 
-    // Get total points
-    const totalPoints = await sql`
-      SELECT COALESCE(SUM(points), 0) as total FROM users 
-      WHERE class_id = ${class_id} AND role = 'student'
-    `
+    const stats = {
+      total_students: Number.parseInt(studentStats.total_students) || 0,
+      total_class_points: Number.parseInt(studentStats.total_class_points) || 0,
+      pending_actions: Number.parseInt(actionStats.pending_actions) || 0,
+      approved_actions: Number.parseInt(actionStats.approved_actions) || 0,
+      average_student_points: Math.round(Number.parseFloat(studentStats.average_student_points) || 0),
+    }
 
-    return NextResponse.json({
-      totalStudents: Number.parseInt(studentsCount[0].count),
-      pendingActions: Number.parseInt(pendingCount[0].count),
-      approvedActions: Number.parseInt(approvedCount[0].count),
-      totalPoints: Number.parseInt(totalPoints[0].total),
-    })
+    return NextResponse.json(stats)
   } catch (error) {
     console.error("Error fetching teacher stats:", error)
-    return NextResponse.json({ error: "Failed to fetch teacher stats" }, { status: 500 })
+    return NextResponse.json({
+      total_students: 0,
+      total_class_points: 0,
+      pending_actions: 0,
+      approved_actions: 0,
+      average_student_points: 0,
+    })
   }
 }

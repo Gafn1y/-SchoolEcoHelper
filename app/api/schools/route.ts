@@ -1,53 +1,59 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
-
-const sql = neon(process.env.DATABASE_URL!)
-
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const directorId = searchParams.get("director_id")
-
-    if (!directorId) {
-      return NextResponse.json({ error: "Director ID is required" }, { status: 400 })
-    }
-
-    const schools = await sql`
-      SELECT 
-        s.*,
-        u.name as director_name,
-        u.email as director_email
-      FROM schools s
-      LEFT JOIN users u ON s.director_id = u.id
-      WHERE s.director_id = ${directorId}
-      ORDER BY s.created_at DESC
-    `
-
-    return NextResponse.json(schools)
-  } catch (error) {
-    console.error("Error fetching schools:", error)
-    return NextResponse.json({ error: "Failed to fetch schools" }, { status: 500 })
-  }
-}
+import { sql } from "@/lib/db"
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { name, address, total_classes, director_id } = body
-
-    if (!name || !director_id) {
-      return NextResponse.json({ error: "Name and director_id are required" }, { status: 400 })
-    }
+    const { name, address, total_classes, director_id } = await request.json()
 
     const result = await sql`
       INSERT INTO schools (name, address, total_classes, director_id)
-      VALUES (${name}, ${address || ""}, ${total_classes || 0}, ${director_id})
+      VALUES (${name}, ${address || null}, ${total_classes}, ${director_id})
       RETURNING *
+    `
+
+    // Update director's school_id
+    await sql`
+      UPDATE users 
+      SET school_id = ${result[0].id}
+      WHERE id = ${director_id}
     `
 
     return NextResponse.json(result[0])
   } catch (error) {
     console.error("Error creating school:", error)
     return NextResponse.json({ error: "Failed to create school" }, { status: 500 })
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const directorId = searchParams.get("director_id")
+
+    let query
+    if (directorId) {
+      // Fetch schools for a specific director
+      query = sql`
+        SELECT s.*, u.name as director_name, u.email as director_email
+        FROM schools s
+        LEFT JOIN users u ON s.director_id = u.id
+        WHERE s.director_id = ${directorId}
+        ORDER BY s.created_at DESC
+      `
+    } else {
+      // Fetch all schools for registration dropdown
+      query = sql`
+        SELECT s.*, u.name as director_name, u.email as director_email
+        FROM schools s
+        LEFT JOIN users u ON s.director_id = u.id
+        ORDER BY s.name
+      `
+    }
+
+    const schools = await query
+    return NextResponse.json(schools)
+  } catch (error) {
+    console.error("Error fetching schools:", error)
+    return NextResponse.json({ error: "Failed to fetch schools" }, { status: 500 })
   }
 }

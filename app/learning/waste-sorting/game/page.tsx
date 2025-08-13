@@ -2,250 +2,348 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, RotateCcw, CheckCircle } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { RotateCcw, Star, CheckCircle, XCircle, Home } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 interface WasteItem {
-  emoji: string
-  type: "plastic" | "organic" | "paper"
+  id: number
+  name: string
+  icon: string
+  correctBin: string
+  description: string
+}
+
+interface Bin {
   id: string
+  name: string
+  color: string
+  icon: string
+  bgColor: string
 }
 
-interface GameState {
-  plastic: { collected: number; total: number }
-  organic: { collected: number; total: number }
-  paper: { collected: number; total: number }
-}
+const wasteItems: WasteItem[] = [
+  { id: 1, name: "Газета", icon: "📰", correctBin: "paper", description: "Бумажные изделия" },
+  { id: 2, name: "Пластиковая бутылка", icon: "🥤", correctBin: "plastic", description: "Пластиковая упаковка" },
+  { id: 3, name: "Стеклянная банка", icon: "🍯", correctBin: "glass", description: "Стеклянная тара" },
+  { id: 4, name: "Яблочная кожура", icon: "🍎", correctBin: "organic", description: "Органические отходы" },
+  { id: 5, name: "Картонная коробка", icon: "📦", correctBin: "paper", description: "Картонная упаковка" },
+  { id: 6, name: "Пластиковый пакет", icon: "🛍️", correctBin: "plastic", description: "Пластиковые изделия" },
+  { id: 7, name: "Стеклянная бутылка", icon: "🍶", correctBin: "glass", description: "Стеклянная посуда" },
+  { id: 8, name: "Банановая кожура", icon: "🍌", correctBin: "organic", description: "Пищевые отходы" },
+  { id: 9, name: "Журнал", icon: "📖", correctBin: "paper", description: "Печатная продукция" },
+  { id: 10, name: "Йогуртовый стаканчик", icon: "🥛", correctBin: "plastic", description: "Пластиковая тара" },
+]
 
-const wasteTypes = {
-  plastic: {
-    items: ["🥤", "🍼", "🧴", "🛍️", "🥛"],
-    label: "Пластик",
-    color: "bg-green-500",
-    lightColor: "bg-green-50",
-    textColor: "text-green-700",
-  },
-  organic: {
-    items: ["🍎", "🍌", "🥕", "🍞", "🥔"],
-    label: "Органика",
-    color: "bg-yellow-500",
-    lightColor: "bg-yellow-50",
-    textColor: "text-yellow-700",
-  },
-  paper: {
-    items: ["📄", "📰", "📋", "📦", "📚"],
-    label: "Бумага",
-    color: "bg-red-500",
-    lightColor: "bg-red-50",
-    textColor: "text-red-700",
-  },
-}
+const bins: Bin[] = [
+  { id: "paper", name: "Бумага", color: "blue", icon: "📄", bgColor: "bg-blue-100" },
+  { id: "plastic", name: "Пластик", color: "yellow", icon: "🥤", bgColor: "bg-yellow-100" },
+  { id: "glass", name: "Стекло", color: "green", icon: "🍶", bgColor: "bg-green-100" },
+  { id: "organic", name: "Органика", color: "brown", icon: "🍎", bgColor: "bg-orange-100" },
+]
 
 export default function WasteSortingGame() {
   const router = useRouter()
-  const [gameState, setGameState] = useState<GameState>({
-    plastic: { collected: 0, total: 5 },
-    organic: { collected: 0, total: 5 },
-    paper: { collected: 0, total: 5 },
+  const [currentItem, setCurrentItem] = useState(0)
+  const [score, setScore] = useState(0)
+  const [lives, setLives] = useState(3)
+  const [gameOver, setGameOver] = useState(false)
+  const [gameWon, setGameWon] = useState(false)
+  const [feedback, setFeedback] = useState<{ show: boolean; correct: boolean; message: string }>({
+    show: false,
+    correct: false,
+    message: "",
   })
-  const [currentWaste, setCurrentWaste] = useState<WasteItem[]>([])
-  const [message, setMessage] = useState("")
-  const [messageType, setMessageType] = useState<"success" | "error" | "">("")
-  const [gameComplete, setGameComplete] = useState(false)
+  const [draggedItem, setDraggedItem] = useState<WasteItem | null>(null)
 
-  useEffect(() => {
-    initGame()
-  }, [])
+  const currentWasteItem = wasteItems[currentItem]
+  const progress = ((currentItem + 1) / wasteItems.length) * 100
 
-  const initGame = () => {
-    const newWaste: WasteItem[] = []
-    const newGameState = {
-      plastic: { collected: 0, total: 5 },
-      organic: { collected: 0, total: 5 },
-      paper: { collected: 0, total: 5 },
-    }
-
-    Object.keys(wasteTypes).forEach((type) => {
-      for (let i = 0; i < newGameState[type as keyof GameState].total; i++) {
-        const randomEmoji =
-          wasteTypes[type as keyof typeof wasteTypes].items[
-            i % wasteTypes[type as keyof typeof wasteTypes].items.length
-          ]
-        newWaste.push({
-          emoji: randomEmoji,
-          type: type as "plastic" | "organic" | "paper",
-          id: `${type}-${i}`,
-        })
-      }
-    })
-
-    const shuffledWaste = newWaste.sort(() => Math.random() - 0.5)
-    setCurrentWaste(shuffledWaste)
-    setGameState(newGameState)
-    setMessage("")
-    setMessageType("")
-    setGameComplete(false)
-  }
-
-  const handleDragStart = (e: React.DragEvent, waste: WasteItem) => {
-    e.dataTransfer.setData("text/plain", JSON.stringify(waste))
+  const handleDragStart = (item: WasteItem) => {
+    setDraggedItem(item)
   }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
   }
 
-  const handleDrop = (e: React.DragEvent, binType: string) => {
+  const handleDrop = (e: React.DragEvent, binId: string) => {
     e.preventDefault()
-    const wasteData = JSON.parse(e.dataTransfer.getData("text/plain"))
-
-    if (wasteData.type === binType) {
-      // Correct sorting
-      setGameState((prev) => ({
-        ...prev,
-        [binType]: { ...prev[binType as keyof GameState], collected: prev[binType as keyof GameState].collected + 1 },
-      }))
-
-      setCurrentWaste((prev) => prev.filter((item) => item.id !== wasteData.id))
-      setMessage("Отлично! Правильная сортировка! 🎉")
-      setMessageType("success")
-
-      // Check if game is complete
-      setTimeout(() => {
-        const updatedGameState = {
-          ...gameState,
-          [binType]: {
-            ...gameState[binType as keyof GameState],
-            collected: gameState[binType as keyof GameState].collected + 1,
-          },
-        }
-
-        const isComplete = Object.values(updatedGameState).every((state) => state.collected === state.total)
-        if (isComplete) {
-          setGameComplete(true)
-          setMessage("🎊 Поздравляем! Вы отсортировали весь мусор! 🎊")
-        }
-      }, 100)
-    } else {
-      // Wrong sorting
-      setMessage("Неправильно! Попробуй еще раз! 😅")
-      setMessageType("error")
+    if (draggedItem) {
+      handleBinClick(binId)
     }
+    setDraggedItem(null)
+  }
 
-    // Clear message after 2 seconds
-    setTimeout(() => {
-      setMessage("")
-      setMessageType("")
-    }, 2000)
+  const handleBinClick = (binId: string) => {
+    const isCorrect = binId === currentWasteItem.correctBin
+
+    if (isCorrect) {
+      setScore(score + 10)
+      setFeedback({
+        show: true,
+        correct: true,
+        message: `Правильно! ${currentWasteItem.name} действительно относится к категории "${bins.find((b) => b.id === binId)?.name}"`,
+      })
+
+      setTimeout(() => {
+        setFeedback({ show: false, correct: false, message: "" })
+        if (currentItem < wasteItems.length - 1) {
+          setCurrentItem(currentItem + 1)
+        } else {
+          setGameWon(true)
+        }
+      }, 2000)
+    } else {
+      const newLives = lives - 1
+      setLives(newLives)
+      setFeedback({
+        show: true,
+        correct: false,
+        message: `Неправильно! ${currentWasteItem.name} должен попасть в контейнер для "${bins.find((b) => b.id === currentWasteItem.correctBin)?.name}"`,
+      })
+
+      if (newLives === 0) {
+        setTimeout(() => {
+          setGameOver(true)
+        }, 2000)
+      } else {
+        setTimeout(() => {
+          setFeedback({ show: false, correct: false, message: "" })
+        }, 2000)
+      }
+    }
+  }
+
+  const resetGame = () => {
+    setCurrentItem(0)
+    setScore(0)
+    setLives(3)
+    setGameOver(false)
+    setGameWon(false)
+    setFeedback({ show: false, correct: false, message: "" })
+  }
+
+  const getScoreRating = () => {
+    const percentage = (score / (wasteItems.length * 10)) * 100
+    if (percentage >= 90) return { rating: "Отлично!", color: "text-green-600", stars: 3 }
+    if (percentage >= 70) return { rating: "Хорошо!", color: "text-blue-600", stars: 2 }
+    if (percentage >= 50) return { rating: "Неплохо!", color: "text-yellow-600", stars: 1 }
+    return { rating: "Попробуйте еще раз!", color: "text-red-600", stars: 0 }
+  }
+
+  if (gameOver) {
+    const rating = getScoreRating()
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm border-red-200">
+          <CardHeader className="text-center">
+            <div className="text-6xl mb-4">😞</div>
+            <CardTitle className="text-2xl text-red-800">Игра окончена</CardTitle>
+            <CardDescription>Не расстраивайтесь, попробуйте еще раз!</CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <div className="bg-red-50 p-4 rounded-lg">
+              <p className="text-lg font-semibold text-red-800">Ваш результат: {score} очков</p>
+              <p className={`text-sm ${rating.color}`}>{rating.rating}</p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Button onClick={resetGame} className="bg-red-600 hover:bg-red-700">
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Играть снова
+              </Button>
+              <Button variant="outline" onClick={() => router.push("/learning/waste-sorting")}>
+                Вернуться к обучению
+              </Button>
+              <Button variant="ghost" onClick={() => router.push("/dashboard/student")}>
+                <Home className="h-4 w-4 mr-2" />
+                На главную
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (gameWon) {
+    const rating = getScoreRating()
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm border-green-200">
+          <CardHeader className="text-center">
+            <div className="text-6xl mb-4">🎉</div>
+            <CardTitle className="text-2xl text-green-800">Поздравляем!</CardTitle>
+            <CardDescription>Вы успешно завершили игру по сортировке отходов!</CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-lg font-semibold text-green-800">Ваш результат: {score} очков</p>
+              <p className={`text-sm ${rating.color}`}>{rating.rating}</p>
+              <div className="flex justify-center mt-2">
+                {[...Array(3)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-6 w-6 ${i < rating.stars ? "text-yellow-500 fill-current" : "text-gray-300"}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-sm text-blue-800">
+                Вы заработали <strong>+50 очков</strong> за завершение игры!
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Button onClick={resetGame} className="bg-green-600 hover:bg-green-700">
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Играть снова
+              </Button>
+              <Button variant="outline" onClick={() => router.push("/learning/waste-sorting")}>
+                Вернуться к обучению
+              </Button>
+              <Button variant="ghost" onClick={() => router.push("/dashboard/student")}>
+                <Home className="h-4 w-4 mr-2" />
+                На главную
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-blue-100 to-green-100">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="outline"
-            onClick={() => router.push("/dashboard/student")}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Назад к панели
-          </Button>
-          <h1 className="text-3xl font-bold text-center text-purple-800">🌍 Сортировка Мусора</h1>
-          <Button variant="outline" onClick={initGame} className="flex items-center gap-2 bg-transparent">
-            <RotateCcw className="h-4 w-4" />
-            Новая игра
-          </Button>
-        </div>
-
-        {/* Score Board */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              {Object.entries(gameState).map(([type, state]) => (
-                <div key={type} className="space-y-2">
-                  <div className="font-medium">{wasteTypes[type as keyof typeof wasteTypes].label}</div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {state.collected}/{state.total}
-                  </div>
-                </div>
-              ))}
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-green-200 sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => router.back()}>
+                ← Назад
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                  Игра: Сортировка отходов
+                </h1>
+                <p className="text-sm text-gray-600">Перетащите предмет в правильный контейнер</p>
+              </div>
             </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-gray-600">
+                  Очки: <span className="font-semibold">{score}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Жизни: <span className="font-semibold text-red-600">{"❤️".repeat(lives)}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Progress */}
+        <Card className="mb-8 bg-white/80 backdrop-blur-sm border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-blue-800">Прогресс игры</h2>
+              <Badge className="bg-blue-100 text-blue-800">
+                {currentItem + 1} из {wasteItems.length}
+              </Badge>
+            </div>
+            <Progress value={progress} className="h-3" />
+          </CardContent>
+        </Card>
+
+        {/* Current Item */}
+        <Card className="mb-8 bg-white/90 backdrop-blur-sm border-purple-200">
+          <CardHeader className="text-center">
+            <CardTitle className="text-purple-800">Что делать с этим предметом?</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div
+              className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-8 mb-4 cursor-move select-none"
+              draggable
+              onDragStart={() => handleDragStart(currentWasteItem)}
+            >
+              <div className="text-6xl mb-4">{currentWasteItem.icon}</div>
+              <h3 className="text-2xl font-bold text-purple-800 mb-2">{currentWasteItem.name}</h3>
+              <p className="text-purple-600">{currentWasteItem.description}</p>
+            </div>
+            <p className="text-sm text-gray-600">Перетащите предмет в правильный контейнер или нажмите на контейнер</p>
           </CardContent>
         </Card>
 
         {/* Bins */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {Object.entries(wasteTypes).map(([type, config]) => (
-            <div
-              key={type}
-              className={`relative w-full h-40 ${config.color} rounded-xl flex flex-col items-center justify-center text-white transition-all duration-300 hover:scale-105 shadow-lg`}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {bins.map((bin) => (
+            <Card
+              key={bin.id}
+              className={`${bin.bgColor} border-2 border-dashed border-gray-300 hover:border-gray-400 cursor-pointer transition-all duration-300 hover:shadow-lg`}
+              onClick={() => handleBinClick(bin.id)}
               onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, type)}
+              onDrop={(e) => handleDrop(e, bin.id)}
             >
-              <div className="absolute -top-3 -right-3 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md">
-                <span className="font-bold text-gray-800">
-                  {gameState[type as keyof GameState].collected}/{gameState[type as keyof GameState].total}
-                </span>
-              </div>
-              <div className="text-5xl mb-2">{config.items[0]}</div>
-              <div className="text-xl font-bold">{config.label}</div>
-            </div>
+              <CardContent className="p-6 text-center">
+                <div className="text-4xl mb-3">{bin.icon}</div>
+                <h3 className="font-bold text-lg mb-1">{bin.name}</h3>
+                <p className="text-sm text-gray-600 capitalize">{bin.color} контейнер</p>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
-        {/* Waste Items */}
-        <Card>
+        {/* Feedback */}
+        {feedback.show && (
+          <Card className={`mb-8 ${feedback.correct ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
+            <CardContent className="p-6 text-center">
+              <div className="text-4xl mb-4">
+                {feedback.correct ? (
+                  <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
+                ) : (
+                  <XCircle className="h-12 w-12 text-red-600 mx-auto" />
+                )}
+              </div>
+              <p className={`text-lg font-semibold ${feedback.correct ? "text-green-800" : "text-red-800"}`}>
+                {feedback.message}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Instructions */}
+        <Card className="bg-white/80 backdrop-blur-sm border-gray-200">
           <CardHeader>
-            <CardTitle className="text-center">Перетащите предметы в правильные контейнеры</CardTitle>
+            <CardTitle className="text-gray-800">Как играть</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-5 md:grid-cols-8 gap-4 min-h-[200px] p-4 bg-gray-50 rounded-lg">
-              {currentWaste.map((waste) => (
-                <div
-                  key={waste.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, waste)}
-                  className="w-16 h-16 flex items-center justify-center text-3xl cursor-grab bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 active:cursor-grabbing"
-                >
-                  {waste.emoji}
-                </div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-blue-600">📄</span>
+                <span>Бумага и картон → Синий контейнер</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-yellow-600">🥤</span>
+                <span>Пластик → Желтый контейнер</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-green-600">🍶</span>
+                <span>Стекло → Зеленый контейнер</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-orange-600">🍎</span>
+                <span>Органика → Коричневый контейнер</span>
+              </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* Message */}
-        {message && (
-          <div
-            className={`text-center mt-6 text-lg font-bold ${
-              messageType === "success" ? "text-green-600" : messageType === "error" ? "text-red-600" : "text-gray-600"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-
-        {/* Complete Button */}
-        {gameComplete && (
-          <div className="text-center mt-6">
-            <Button
-              size="lg"
-              className="bg-green-600 hover:bg-green-700"
-              onClick={() => {
-                setMessage("🌟 Отличная работа! Планета благодарит вас! 🌟")
-                setMessageType("success")
-              }}
-            >
-              <CheckCircle className="mr-2 h-5 w-5" />
-              Завершить игру
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   )
