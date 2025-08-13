@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Building, Users, GraduationCap, Plus, Mail, Star, Trophy, ChevronDown } from "lucide-react"
+import { Building, Users, GraduationCap, Plus, Star, Trophy, ChevronDown } from "lucide-react"
 
 interface User {
   id: number
@@ -52,16 +52,6 @@ interface Teacher {
   student_count: number
 }
 
-interface TeacherInvite {
-  id: number
-  email: string
-  invite_code: string
-  status: string
-  class_name: string
-  created_at: string
-  expires_at: string
-}
-
 interface SchoolStats {
   totalStudents: number
   totalTeachers: number
@@ -75,7 +65,6 @@ export default function DirectorDashboard() {
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null)
   const [classes, setClasses] = useState<Class[]>([])
   const [teachers, setTeachers] = useState<Teacher[]>([])
-  const [teacherInvites, setTeacherInvites] = useState<TeacherInvite[]>([])
   const [stats, setStats] = useState<SchoolStats>({
     totalStudents: 0,
     totalTeachers: 0,
@@ -86,8 +75,6 @@ export default function DirectorDashboard() {
   // Form states
   const [newClassName, setNewClassName] = useState("")
   const [newClassGrade, setNewClassGrade] = useState("")
-  const [inviteEmail, setInviteEmail] = useState("")
-  const [selectedClassId, setSelectedClassId] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [showSchoolSelector, setShowSchoolSelector] = useState(false)
@@ -135,7 +122,6 @@ export default function DirectorDashboard() {
     try {
       await fetchClasses(schoolId)
       await fetchTeachers(schoolId)
-      await fetchTeacherInvites(schoolId)
       await fetchSchoolStats(schoolId)
     } catch (error) {
       console.error("Error fetching school data:", error)
@@ -164,18 +150,6 @@ export default function DirectorDashboard() {
       }
     } catch (error) {
       console.error("Error fetching teachers:", error)
-    }
-  }
-
-  const fetchTeacherInvites = async (schoolId: number) => {
-    try {
-      const response = await fetch(`/api/teacher-invites?school_id=${schoolId}`)
-      if (response.ok) {
-        const invitesData = await response.json()
-        setTeacherInvites(invitesData)
-      }
-    } catch (error) {
-      console.error("Error fetching teacher invites:", error)
     }
   }
 
@@ -269,72 +243,12 @@ export default function DirectorDashboard() {
     }
   }
 
-  const handleInviteTeacher = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedSchool || !inviteEmail || !selectedClassId) return
-
-    setLoading(true)
-    try {
-      const response = await fetch("/api/teacher-invites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          school_id: selectedSchool.id,
-          class_id: Number.parseInt(selectedClassId),
-          email: inviteEmail,
-        }),
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        setInviteEmail("")
-        setSelectedClassId("")
-        await fetchTeacherInvites(selectedSchool.id)
-        alert(`Приглашение отправлено! Код приглашения: ${result.invite_code}`)
-      } else {
-        const error = await response.json()
-        throw new Error(error.error || "Failed to send invite")
-      }
-    } catch (error) {
-      console.error("Error sending invite:", error)
-      setError(`Ошибка при отправке приглашения: ${error.message}`)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const getInitials = (name: string) => {
     return name
       .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-orange-100 text-orange-800"
-      case "accepted":
-        return "bg-green-100 text-green-800"
-      case "expired":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "Ожидает"
-      case "accepted":
-        return "Принято"
-      case "expired":
-        return "Истекло"
-      default:
-        return status
-    }
   }
 
   if (!user) {
@@ -685,118 +599,55 @@ export default function DirectorDashboard() {
           </TabsList>
 
           <TabsContent value="classes" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Create Class Form */}
-              <Card className="border-0 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-lg">
-                  <CardTitle className="flex items-center gap-3 text-blue-700">
-                    <div className="p-2 bg-blue-200 rounded-lg">
-                      <Plus className="h-5 w-5 text-blue-600" />
-                    </div>
-                    Создать новый класс
-                  </CardTitle>
-                  <CardDescription className="text-blue-600">Добавьте новый класс в вашу школу</CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <form onSubmit={handleCreateClass} className="space-y-4">
-                    <div>
-                      <Label htmlFor="className" className="font-medium">
-                        Название класса
-                      </Label>
-                      <Input
-                        id="className"
-                        value={newClassName}
-                        onChange={(e) => setNewClassName(e.target.value)}
-                        placeholder="например: 5А"
-                        className="mt-1"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="classGrade" className="font-medium">
-                        Параллель
-                      </Label>
-                      <Input
-                        id="classGrade"
-                        value={newClassGrade}
-                        onChange={(e) => setNewClassGrade(e.target.value)}
-                        placeholder="например: 5"
-                        className="mt-1"
-                        required
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0"
-                    >
-                      {loading ? "Создание..." : "Создать класс"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              {/* Invite Teacher Form */}
-              <Card className="border-0 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-green-50 to-teal-50 rounded-t-lg">
-                  <CardTitle className="flex items-center gap-3 text-green-700">
-                    <div className="p-2 bg-green-200 rounded-lg">
-                      <Mail className="h-5 w-5 text-green-600" />
-                    </div>
-                    Пригласить учителя
-                  </CardTitle>
-                  <CardDescription className="text-green-600">
-                    Отправьте приглашение классному руководителю
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <form onSubmit={handleInviteTeacher} className="space-y-4">
-                    <div>
-                      <Label htmlFor="inviteEmail" className="font-medium">
-                        Email учителя
-                      </Label>
-                      <Input
-                        id="inviteEmail"
-                        type="email"
-                        value={inviteEmail}
-                        onChange={(e) => setInviteEmail(e.target.value)}
-                        placeholder="teacher@example.com"
-                        className="mt-1"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="classSelect" className="font-medium">
-                        Класс
-                      </Label>
-                      <select
-                        id="classSelect"
-                        value={selectedClassId}
-                        onChange={(e) => setSelectedClassId(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg mt-1 bg-white"
-                        required
-                      >
-                        <option value="">Выберите класс</option>
-                        {classes
-                          .filter((c) => !c.teacher_name)
-                          .map((cls) => (
-                            <option key={cls.id} value={cls.id}>
-                              {cls.name} ({cls.grade} класс)
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white border-0"
-                    >
-                      {loading ? "Отправка..." : "Отправить приглашение"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Create Class Form */}
+            <Card className="border-0 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-blue-700">
+                  <div className="p-2 bg-blue-200 rounded-lg">
+                    <Plus className="h-5 w-5 text-blue-600" />
+                  </div>
+                  Создать новый класс
+                </CardTitle>
+                <CardDescription className="text-blue-600">Добавьте новый класс в вашу школу</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handleCreateClass} className="space-y-4">
+                  <div>
+                    <Label htmlFor="className" className="font-medium">
+                      Название класса
+                    </Label>
+                    <Input
+                      id="className"
+                      value={newClassName}
+                      onChange={(e) => setNewClassName(e.target.value)}
+                      placeholder="например: 5А"
+                      className="mt-1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="classGrade" className="font-medium">
+                      Параллель
+                    </Label>
+                    <Input
+                      id="classGrade"
+                      value={newClassGrade}
+                      onChange={(e) => setNewClassGrade(e.target.value)}
+                      placeholder="например: 5"
+                      className="mt-1"
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0"
+                  >
+                    {loading ? "Создание..." : "Создать класс"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
 
             {/* Classes List */}
             <Card className="border-0 shadow-xl">
@@ -874,7 +725,7 @@ export default function DirectorDashboard() {
                       <GraduationCap className="h-10 w-10 text-gray-400" />
                     </div>
                     <p className="text-gray-600 text-lg mb-2">Нет активных учителей</p>
-                    <p className="text-gray-500">Отправьте приглашения учителям</p>
+                    <p className="text-gray-500">Учителя появятся здесь после регистрации</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -921,61 +772,6 @@ export default function DirectorDashboard() {
                           <Badge className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border-0">
                             Уровень {teacher.level}
                           </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Teacher Invites */}
-            <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-orange-50 to-red-50 rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-orange-700">
-                  <div className="p-2 bg-orange-200 rounded-lg">
-                    <Mail className="h-6 w-6 text-orange-600" />
-                  </div>
-                  Приглашения учителей
-                </CardTitle>
-                <CardDescription className="text-orange-600">Отправленные приглашения и их статус</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6">
-                {teacherInvites.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                      <Mail className="h-10 w-10 text-gray-400" />
-                    </div>
-                    <p className="text-gray-600 text-lg mb-2">Нет отправленных приглашений</p>
-                    <p className="text-gray-500">Отправьте первое приглашение учителю</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {teacherInvites.map((invite) => (
-                      <div
-                        key={invite.id}
-                        className="flex items-center gap-6 p-6 border border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 transition-all duration-200 hover:shadow-lg"
-                      >
-                        <div className="p-3 bg-orange-100 rounded-full">
-                          <Mail className="h-6 w-6 text-orange-600" />
-                        </div>
-
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg text-gray-800">{invite.email}</h3>
-                          <p className="text-gray-600 mb-1">Класс: {invite.class_name}</p>
-                          <p className="text-sm text-gray-500">
-                            Отправлено: {new Date(invite.created_at).toLocaleDateString()}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Истекает: {new Date(invite.expires_at).toLocaleDateString()}
-                          </p>
-                        </div>
-
-                        <div className="text-right space-y-2">
-                          <Badge className={`${getStatusColor(invite.status)} border-0 font-medium`}>
-                            {getStatusText(invite.status)}
-                          </Badge>
-                          <p className="text-sm text-gray-500">Код: {invite.invite_code}</p>
                         </div>
                       </div>
                     ))}

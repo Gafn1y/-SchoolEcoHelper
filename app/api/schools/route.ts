@@ -3,11 +3,11 @@ import { sql } from "@/lib/db"
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, address, total_classes, director_id, phone, website, description } = await request.json()
+    const { name, address, total_classes, director_id } = await request.json()
 
     const result = await sql`
-      INSERT INTO schools (name, address, total_classes, director_id, phone, website, description)
-      VALUES (${name}, ${address || null}, ${total_classes}, ${director_id}, ${phone || null}, ${website || null}, ${description || null})
+      INSERT INTO schools (name, address, total_classes, director_id)
+      VALUES (${name}, ${address || null}, ${total_classes}, ${director_id})
       RETURNING *
     `
 

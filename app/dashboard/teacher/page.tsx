@@ -317,7 +317,7 @@ export default function TeacherDashboard() {
               <div className="bg-gradient-to-r from-green-100 to-blue-100 px-4 py-2 rounded-full border-2 border-green-200">
                 <div className="flex items-center gap-2">
                   <Award className="w-5 h-5 text-green-600" />
-                  <span className="font-bold text-green-800">Классный ��уководитель</span>
+                  <span className="font-bold text-green-800">Классный руководитель</span>
                 </div>
               </div>
             </div>
@@ -334,6 +334,7 @@ export default function TeacherDashboard() {
                 <div>
                   <p className="text-blue-600 font-medium text-sm">Учеников</p>
                   <p className="text-3xl font-bold text-blue-700">{classData?.student_count || 0}</p>
+                  <p className="text-blue-500 text-xs">В моем классе</p>
                 </div>
                 <div className="p-3 bg-blue-200 rounded-full">
                   <Users className="h-8 w-8 text-blue-600" />
@@ -348,6 +349,7 @@ export default function TeacherDashboard() {
                 <div>
                   <p className="text-orange-600 font-medium text-sm">На проверке</p>
                   <p className="text-3xl font-bold text-orange-700">{stats.pendingActions}</p>
+                  <p className="text-orange-500 text-xs">Ожидают решения</p>
                 </div>
                 <div className="p-3 bg-orange-200 rounded-full">
                   <Clock className="h-8 w-8 text-orange-600" />
@@ -362,6 +364,7 @@ export default function TeacherDashboard() {
                 <div>
                   <p className="text-green-600 font-medium text-sm">Подтверждено</p>
                   <p className="text-3xl font-bold text-green-700">{stats.approvedActions}</p>
+                  <p className="text-green-500 text-xs">Одобренных действий</p>
                 </div>
                 <div className="p-3 bg-green-200 rounded-full">
                   <CheckCircle className="h-8 w-8 text-green-600" />
@@ -376,6 +379,7 @@ export default function TeacherDashboard() {
                 <div>
                   <p className="text-yellow-600 font-medium text-sm">Очки класса</p>
                   <p className="text-3xl font-bold text-yellow-700">{stats.totalPoints}</p>
+                  <p className="text-yellow-500 text-xs">Общие очки</p>
                 </div>
                 <div className="p-3 bg-yellow-200 rounded-full">
                   <Star className="h-8 w-8 text-yellow-600" />
