@@ -2,7 +2,7 @@
 
 # Website information
 
-Website author: Aleksey Sukovatitsyn
+Website author: Alexey Sukovatitsyn
 
 Date of creation: In progress
 
