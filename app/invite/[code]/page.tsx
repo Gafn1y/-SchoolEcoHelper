@@ -70,7 +70,7 @@ export default function AcceptInvitePage({ params }: { params: { code: string } 
       }
     } catch (error) {
       console.error('Error accepting invite:', error)
-      setError('Ошибка при принятии приглашения')
+      setError('Ошибка п��и принятии приглашения')
     } finally {
       setLoading(false)
     }

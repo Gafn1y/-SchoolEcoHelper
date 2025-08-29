@@ -142,7 +142,7 @@ function RegisterForm() {
           throw new Error(userData.error || "Registration failed")
         }
 
-        const user = userData
+        console.log("Director user created:", userData)
 
         // Then create school with director_id
         const schoolResponse = await fetch("/api/schools", {
@@ -151,37 +151,29 @@ function RegisterForm() {
           body: JSON.stringify({
             name: formData.school_name,
             address: formData.school_address,
-            total_classes: Number.parseInt(formData.total_classes),
-            director_id: user.id,
+            total_classes: Number.parseInt(formData.total_classes) || 0,
+            director_id: userData.id,
           }),
         })
+
+        const schoolData = await schoolResponse.json()
 
         if (!schoolResponse.ok) {
-          throw new Error("Failed to create school")
+          throw new Error(schoolData.error || "Failed to create school")
         }
 
-        const school = await schoolResponse.json()
+        console.log("School created and director updated:", schoolData)
 
-        // Update user with school_id
-        await fetch("/api/users", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: user.id,
-            school_id: school.id,
-          }),
-        })
+        // Store user data with updated school info
+        const finalUserData = {
+          ...userData,
+          school_id: schoolData.school.id,
+          school_name: schoolData.school.name,
+        }
 
-        // Store user data with school info
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            ...user,
-            school_id: school.id,
-            school_name: school.name,
-          }),
-        )
+        localStorage.setItem("user", JSON.stringify(finalUserData))
 
+        // Redirect immediately to director dashboard
         router.push("/dashboard/director")
       } else {
         // Regular registration for students and teachers
@@ -211,7 +203,7 @@ function RegisterForm() {
 
         localStorage.setItem("user", JSON.stringify(user))
 
-        // Redirect based on role
+        // Redirect immediately based on role
         if (formData.role === "student") {
           router.push("/dashboard/student")
         } else if (formData.role === "teacher") {

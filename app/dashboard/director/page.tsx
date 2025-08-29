@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,6 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Users,
   GraduationCap,
@@ -15,10 +21,9 @@ import {
   LogOut,
   Plus,
   Eye,
-  Star,
+  SchoolIcon,
   CheckCircle,
-  Clock,
-  XCircle,
+  AlertCircle,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -115,8 +120,19 @@ export default function DirectorDashboard() {
   })
   const [selectedClass, setSelectedClass] = useState<ClassDetails | null>(null)
   const [showClassDialog, setShowClassDialog] = useState(false)
+  const [showCreateClassDialog, setShowCreateClassDialog] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [createClassLoading, setCreateClassLoading] = useState(false)
+  const [createClassError, setCreateClassError] = useState<string | null>(null)
+  const [createClassSuccess, setCreateClassSuccess] = useState<string | null>(null)
+
+  // Create class form state
+  const [newClass, setNewClass] = useState({
+    name: "",
+    grade: "",
+    capacity: "30",
+  })
 
   useEffect(() => {
     const userData = localStorage.getItem("user")
@@ -235,6 +251,54 @@ export default function DirectorDashboard() {
     }
   }
 
+  const handleCreateClass = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCreateClassLoading(true)
+    setCreateClassError(null)
+    setCreateClassSuccess(null)
+
+    try {
+      const response = await fetch("/api/classes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newClass.name,
+          grade: newClass.grade,
+          school_id: user?.school_id,
+          capacity: Number.parseInt(newClass.capacity) || 30,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setCreateClassSuccess(`Класс "${newClass.name}" успешно создан!`)
+        setNewClass({ name: "", grade: "", capacity: "30" })
+
+        // Refresh classes list and stats
+        if (user?.school_id) {
+          await fetchClasses(user.school_id)
+          await fetchStats(user.school_id)
+        }
+
+        // Close dialog after 2 seconds
+        setTimeout(() => {
+          setShowCreateClassDialog(false)
+          setCreateClassSuccess(null)
+        }, 2000)
+      } else {
+        setCreateClassError(data.error || "Ошибка при создании класса")
+      }
+    } catch (error) {
+      console.error("Error creating class:", error)
+      setCreateClassError("Ошибка сети. Попробуйте еще раз.")
+    } finally {
+      setCreateClassLoading(false)
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem("user")
     router.push("/")
@@ -301,7 +365,7 @@ export default function DirectorDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -352,35 +416,7 @@ export default function DirectorDashboard() {
                   <p className="text-3xl font-bold">{stats.total_points}</p>
                 </div>
                 <div className="bg-white/20 p-3 rounded-full">
-                  <Star className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm font-medium">На проверке</p>
-                  <p className="text-3xl font-bold">{stats.pending_actions}</p>
-                </div>
-                <div className="bg-white/20 p-3 rounded-full">
-                  <Clock className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-indigo-100 text-sm font-medium">Одобрено</p>
-                  <p className="text-3xl font-bold">{stats.approved_actions}</p>
-                </div>
-                <div className="bg-white/20 p-3 rounded-full">
-                  <CheckCircle className="h-6 w-6" />
+                  <SchoolIcon className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
@@ -420,7 +456,10 @@ export default function DirectorDashboard() {
           <TabsContent value="classes" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900">Классы школы</h2>
-              <Button className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+              <Button
+                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                onClick={() => setShowCreateClassDialog(true)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Создать класс
               </Button>
@@ -431,7 +470,14 @@ export default function DirectorDashboard() {
                 <CardContent className="text-center py-12">
                   <GraduationCap className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-700 mb-2">Нет классов</h3>
-                  <p className="text-gray-500">Создайте первый класс для начала работы</p>
+                  <p className="text-gray-500 mb-4">Создайте первый класс для начала работы</p>
+                  <Button
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                    onClick={() => setShowCreateClassDialog(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Создать класс
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
@@ -676,6 +722,102 @@ export default function DirectorDashboard() {
         </Tabs>
       </div>
 
+      {/* Create Class Dialog */}
+      <Dialog open={showCreateClassDialog} onOpenChange={setShowCreateClassDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Создать новый класс
+            </DialogTitle>
+            <DialogDescription>Заполните информацию о новом классе</DialogDescription>
+          </DialogHeader>
+
+          {createClassError && (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-700">{createClassError}</AlertDescription>
+            </Alert>
+          )}
+
+          {createClassSuccess && (
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-700">{createClassSuccess}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleCreateClass} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="class-name">Название класса</Label>
+              <Input
+                id="class-name"
+                type="text"
+                placeholder="Например: 7А, 8Б, 9В"
+                value={newClass.name}
+                onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="class-grade">Параллель</Label>
+              <Select value={newClass.grade} onValueChange={(value) => setNewClass({ ...newClass, grade: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите параллель" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="6">6 класс</SelectItem>
+                  <SelectItem value="7">7 класс</SelectItem>
+                  <SelectItem value="8">8 класс</SelectItem>
+                  <SelectItem value="9">9 класс</SelectItem>
+                  <SelectItem value="10">10 класс</SelectItem>
+                  <SelectItem value="11">11 класс</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="class-capacity">Максимальное количество учеников</Label>
+              <Input
+                id="class-capacity"
+                type="number"
+                placeholder="30"
+                min="10"
+                max="40"
+                value={newClass.capacity}
+                onChange={(e) => setNewClass({ ...newClass, capacity: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 bg-transparent"
+                onClick={() => {
+                  setShowCreateClassDialog(false)
+                  setCreateClassError(null)
+                  setCreateClassSuccess(null)
+                  setNewClass({ name: "", grade: "", capacity: "30" })
+                }}
+                disabled={createClassLoading}
+              >
+                Отмена
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                disabled={createClassLoading || !newClass.name || !newClass.grade}
+              >
+                {createClassLoading ? "Создание..." : "Создать класс"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Class Details Dialog */}
       <Dialog open={showClassDialog} onOpenChange={setShowClassDialog}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -690,7 +832,7 @@ export default function DirectorDashboard() {
           {selectedClass && (
             <div className="space-y-6">
               {/* Class Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-blue-600">{selectedClass.stats.total_students}</div>
@@ -701,12 +843,6 @@ export default function DirectorDashboard() {
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-green-600">{selectedClass.stats.total_points}</div>
                     <div className="text-sm text-gray-600">Очков</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-600">{selectedClass.stats.pending_actions}</div>
-                    <div className="text-sm text-gray-600">На проверке</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -810,13 +946,7 @@ export default function DirectorDashboard() {
                                     : "bg-red-100 text-red-800"
                               }
                             >
-                              {activity.status === "approved" ? (
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                              ) : activity.status === "pending" ? (
-                                <Clock className="h-3 w-3 mr-1" />
-                              ) : (
-                                <XCircle className="h-3 w-3 mr-1" />
-                              )}
+                              <CheckCircle className="h-3 w-3 mr-1" />
                               {activity.status === "approved"
                                 ? "Одобрено"
                                 : activity.status === "pending"
