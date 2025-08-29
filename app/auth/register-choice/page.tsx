@@ -37,7 +37,7 @@ export default function RegisterChoicePage() {
                   <li>• Создание и управление школой</li>
                   <li>• Добавление классов</li>
                   <li>• Общая аналитика школы</li>
-                  <li>• Управление учителями</li>
+                  <li>�� Управление учителями</li>
                 </ul>
                 <Button className="w-full bg-purple-600 hover:bg-purple-700">
                   Выбрать роль

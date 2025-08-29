@@ -503,10 +503,7 @@ export default function DirectorDashboard() {
                           <span className="text-sm text-gray-600">Учеников:</span>
                           <Badge className="bg-blue-100 text-blue-800">{classItem.student_count}</Badge>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Учитель:</span>
-                          <span className="text-sm text-gray-900">{classItem.teacher_name || "Не назначен"}</span>
-                        </div>
+                        
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">Создан:</span>
                           <span className="text-sm text-gray-500">
